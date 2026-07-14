@@ -12,6 +12,13 @@ const (
 	NetworkModeWAN NetworkMode = "wan"
 )
 
+type StorageType string
+
+const (
+	StorageTypeSQLite StorageType = "sqlite"
+	StorageTypeMySQL  StorageType = "mysql"
+)
+
 type Config struct {
 	NetworkMode NetworkMode
 	Port        int
@@ -20,6 +27,8 @@ type Config struct {
 	TURNConfig  TURNConfig
 	ServerAddr  string
 	Username    string
+	StorageType StorageType
+	MySQLDSN    string
 }
 
 type TURNConfig struct {
@@ -39,6 +48,8 @@ func DefaultConfig() Config {
 		},
 		TURNConfig: TURNConfig{},
 		Username:   "anonymous",
+		StorageType: StorageTypeSQLite,
+		MySQLDSN:    "root:password@tcp(127.0.0.1:3306)/voip?parseTime=true",
 	}
 }
 
@@ -47,6 +58,12 @@ func Load() Config {
 
 	if v := os.Getenv("VOIP_NETWORK_MODE"); v == string(NetworkModeWAN) {
 		cfg.NetworkMode = NetworkModeWAN
+	}
+	if v := os.Getenv("VOIP_STORAGE_TYPE"); v == string(StorageTypeMySQL) {
+		cfg.StorageType = StorageTypeMySQL
+	}
+	if v := os.Getenv("VOIP_MYSQL_DSN"); v != "" {
+		cfg.MySQLDSN = v
 	}
 	if v := os.Getenv("VOIP_PORT"); v != "" {
 		if p, err := strconv.Atoi(v); err == nil && p > 0 && p < 65536 {

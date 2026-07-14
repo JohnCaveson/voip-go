@@ -15,5 +15,11 @@ wails dev -tags webkit2_41
 # Production build
 wails build -tags webkit2_41
 
+# Start MySQL
+docker compose up -d
+
+# Run the app with MySQL backend
+VOIP_STORAGE_TYPE=mysql wails dev -tags webkit2_41
+
 # Run the WAN signaling server separately
 go run ./server/cmd/server --port 9321

@@ -63,6 +63,32 @@ func TestLoadInvalidPort(t *testing.T) {
 	}
 }
 
+func TestDefaultStorageType(t *testing.T) {
+	cfg := DefaultConfig()
+	if cfg.StorageType != StorageTypeSQLite {
+		t.Errorf("expected sqlite, got %s", cfg.StorageType)
+	}
+	if cfg.MySQLDSN == "" {
+		t.Error("expected default MySQL DSN")
+	}
+}
+
+func TestLoadMySQLConfig(t *testing.T) {
+	os.Setenv("VOIP_STORAGE_TYPE", "mysql")
+	os.Setenv("VOIP_MYSQL_DSN", "user:pass@tcp(10.0.0.1:3306)/voip?parseTime=true")
+	defer os.Unsetenv("VOIP_STORAGE_TYPE")
+	defer os.Unsetenv("VOIP_MYSQL_DSN")
+
+	cfg := Load()
+
+	if cfg.StorageType != StorageTypeMySQL {
+		t.Errorf("expected mysql, got %s", cfg.StorageType)
+	}
+	if cfg.MySQLDSN != "user:pass@tcp(10.0.0.1:3306)/voip?parseTime=true" {
+		t.Errorf("unexpected DSN: %s", cfg.MySQLDSN)
+	}
+}
+
 func TestLoadTURNConfig(t *testing.T) {
 	os.Setenv("VOIP_TURN_URL", "turn:turn.example.com:3478")
 	os.Setenv("VOIP_TURN_USERNAME", "user")

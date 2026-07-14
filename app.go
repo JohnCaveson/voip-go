@@ -11,6 +11,9 @@ import (
 	"github.com/voip-app/internal/config"
 	"github.com/voip-app/internal/discovery"
 	"github.com/voip-app/internal/storage"
+
+	// Register MySQL driver
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type App struct {
@@ -29,11 +32,7 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.cfg = config.Load()
 
-	dbDir := a.cfg.DataDir
-	if err := os.MkdirAll(dbDir, 0755); err != nil {
-		log.Printf("Failed to create data directory: %v", err)
-	}
-	s, err := storage.NewSQLiteStorage(filepath.Join(dbDir, "voip.db"))
+	s, err := a.initStorage()
 	if err != nil {
 		log.Printf("Failed to initialize storage: %v", err)
 		return
@@ -53,6 +52,19 @@ func (a *App) startup(ctx context.Context) {
 			a.discoverer = d
 			go a.discoverPeers()
 		}
+	}
+}
+
+func (a *App) initStorage() (storage.Storage, error) {
+	switch a.cfg.StorageType {
+	case config.StorageTypeMySQL:
+		return storage.NewMySQLStorage(a.cfg.MySQLDSN)
+	default:
+		dbDir := a.cfg.DataDir
+		if err := os.MkdirAll(dbDir, 0755); err != nil {
+			return nil, err
+		}
+		return storage.NewSQLiteStorage(filepath.Join(dbDir, "voip.db"))
 	}
 }
 
