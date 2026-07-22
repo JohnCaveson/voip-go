@@ -41,12 +41,15 @@ export namespace config {
 	}
 	export class Config {
 	    NetworkMode: string;
+	    AppMode: string;
 	    Port: number;
 	    DataDir: string;
 	    STUNURLs: string[];
 	    TURNConfig: TURNConfig;
 	    ServerAddr: string;
 	    Username: string;
+	    StorageType: string;
+	    MongoDBURI: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -55,12 +58,15 @@ export namespace config {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.NetworkMode = source["NetworkMode"];
+	        this.AppMode = source["AppMode"];
 	        this.Port = source["Port"];
 	        this.DataDir = source["DataDir"];
 	        this.STUNURLs = source["STUNURLs"];
 	        this.TURNConfig = this.convertValues(source["TURNConfig"], TURNConfig);
 	        this.ServerAddr = source["ServerAddr"];
 	        this.Username = source["Username"];
+	        this.StorageType = source["StorageType"];
+	        this.MongoDBURI = source["MongoDBURI"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

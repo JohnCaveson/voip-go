@@ -367,3 +367,62 @@ html, body, #root {
   border-radius: 50%;
   background: #a6e3a1;
 }
+
+.mode-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mode-p2p {
+  background: #a6e3a1;
+  color: #1e1e2e;
+}
+
+.mode-hosted {
+  background: #89b4fa;
+  color: #1e1e2e;
+}
+
+.connection-status {
+  position: fixed;
+  bottom: 0;
+  left: 240px;
+  right: 0;
+  padding: 6px 16px;
+  background: #11111b;
+  border-top: 1px solid #313244;
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #6c7086;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-label {
+  color: #6c7086;
+}
+
+.status-value {
+  color: #9399b2;
+}
+
+.status-local {
+  color: #a6e3a1;
+}
+
+.status-remote {
+  color: #89b4fa;
+}
+
+.status-connected {
+  color: #a6e3a1;
+}

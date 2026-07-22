@@ -1,16 +1,29 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: voip-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: voip
-      MYSQL_USER: voip
-      MYSQL_PASSWORD: voip
+  mongodb:
+    image: mongo:7
+    container_name: voip-mongodb
+    restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "27017:27017"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  signaling:
+    build: .
+    container_name: voip-signaling
+    restart: unless-stopped
+    ports:
+      - "9321:9321"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - VOIP_PORT=9321
 
 volumes:
-  mysql_data:
+  mongo_data:

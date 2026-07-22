@@ -1,14 +1,10 @@
-module github.com/voip-app
+module github.com/voip-app/cmd/p2p
 
 go 1.26.4
 
 require (
-	github.com/go-sql-driver/mysql v1.10.0
-	github.com/gorilla/websocket v1.5.3
-	github.com/hashicorp/mdns v1.0.7
+	github.com/voip-app v0.0.0
 	github.com/wailsapp/wails/v2 v2.13.0
-	go.mongodb.org/mongo-driver v1.17.9
-	modernc.org/sqlite v1.53.0
 )
 
 require (
@@ -17,9 +13,12 @@ require (
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/hashicorp/mdns v1.0.7 // indirect
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/labstack/echo/v4 v4.13.3 // indirect
@@ -47,6 +46,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+	go.mongodb.org/mongo-driver v1.17.9 // indirect
 	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.54.0 // indirect
@@ -57,4 +57,7 @@ require (
 	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
+	modernc.org/sqlite v1.53.0 // indirect
 )
+
+replace github.com/voip-app => ../..

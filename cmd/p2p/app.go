@@ -28,6 +28,8 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.cfg = config.Load()
+	a.cfg.AppMode = config.AppModeP2P
+	a.cfg.StorageType = config.StorageTypeSQLite
 
 	s, err := a.initStorage()
 	if err != nil {
@@ -49,6 +51,15 @@ func (a *App) startup(ctx context.Context) {
 			a.discoverer = d
 			go a.discoverPeers()
 		}
+	}
+}
+
+func (a *App) shutdown(ctx context.Context) {
+	if a.discoverer != nil {
+		a.discoverer.Close()
+	}
+	if a.storage != nil {
+		a.storage.Close()
 	}
 }
 
@@ -106,13 +117,4 @@ func (a *App) RenameChannel(id, newName string) error {
 
 func (a *App) GetConfig() config.Config {
 	return a.cfg
-}
-
-func (a *App) Shutdown() {
-	if a.discoverer != nil {
-		a.discoverer.Close()
-	}
-	if a.storage != nil {
-		a.storage.Close()
-	}
 }

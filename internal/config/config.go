@@ -12,15 +12,23 @@ const (
 	NetworkModeWAN NetworkMode = "wan"
 )
 
+type AppMode string
+
+const (
+	AppModeP2P    AppMode = "p2p"
+	AppModeHosted AppMode = "hosted"
+)
+
 type StorageType string
 
 const (
-	StorageTypeSQLite StorageType = "sqlite"
-	StorageTypeMySQL  StorageType = "mysql"
+	StorageTypeSQLite  StorageType = "sqlite"
+	StorageTypeMongoDB StorageType = "mongodb"
 )
 
 type Config struct {
 	NetworkMode NetworkMode
+	AppMode     AppMode
 	Port        int
 	DataDir     string
 	STUNURLs    []string
@@ -28,7 +36,7 @@ type Config struct {
 	ServerAddr  string
 	Username    string
 	StorageType StorageType
-	MySQLDSN    string
+	MongoDBURI  string
 }
 
 type TURNConfig struct {
@@ -40,6 +48,7 @@ type TURNConfig struct {
 func DefaultConfig() Config {
 	return Config{
 		NetworkMode: NetworkModeLAN,
+		AppMode:     AppModeP2P,
 		Port:        9321,
 		DataDir:     "./data",
 		STUNURLs: []string{
@@ -49,21 +58,24 @@ func DefaultConfig() Config {
 		TURNConfig: TURNConfig{},
 		Username:   "anonymous",
 		StorageType: StorageTypeSQLite,
-		MySQLDSN:    "root:password@tcp(127.0.0.1:3306)/voip?parseTime=true",
+		MongoDBURI:  "mongodb://localhost:27017",
 	}
 }
 
 func Load() Config {
 	cfg := DefaultConfig()
 
+	if v := os.Getenv("VOIP_APP_MODE"); v == string(AppModeHosted) {
+		cfg.AppMode = AppModeHosted
+	}
 	if v := os.Getenv("VOIP_NETWORK_MODE"); v == string(NetworkModeWAN) {
 		cfg.NetworkMode = NetworkModeWAN
 	}
-	if v := os.Getenv("VOIP_STORAGE_TYPE"); v == string(StorageTypeMySQL) {
-		cfg.StorageType = StorageTypeMySQL
+	if v := os.Getenv("VOIP_STORAGE_TYPE"); v == string(StorageTypeMongoDB) {
+		cfg.StorageType = StorageTypeMongoDB
 	}
-	if v := os.Getenv("VOIP_MYSQL_DSN"); v != "" {
-		cfg.MySQLDSN = v
+	if v := os.Getenv("VOIP_MONGODB_URI"); v != "" {
+		cfg.MongoDBURI = v
 	}
 	if v := os.Getenv("VOIP_PORT"); v != "" {
 		if p, err := strconv.Atoi(v); err == nil && p > 0 && p < 65536 {

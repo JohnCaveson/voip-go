@@ -5,16 +5,21 @@ type SidebarProps = {
   activeChannelId: string
   onSelectChannel: (id: string) => void
   onAddChannel: () => void
+  appMode: string
 }
 
-function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel }: SidebarProps) {
+function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel, appMode }: SidebarProps) {
   const textChannels = channels.filter(c => c.type === 'text')
   const voiceChannels = channels.filter(c => c.type === 'voice')
+  const isP2P = appMode === 'p2p'
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
         <span>VoIP App</span>
+        <span className={`mode-badge ${isP2P ? 'mode-p2p' : 'mode-hosted'}`}>
+          {isP2P ? 'P2P' : 'Hosted'}
+        </span>
       </div>
 
       <div className="channel-group">

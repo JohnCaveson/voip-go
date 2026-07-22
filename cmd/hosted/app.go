@@ -3,22 +3,19 @@ package main
 import (
 	"context"
 	"log"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/voip-app/internal/channel"
 	"github.com/voip-app/internal/config"
-	"github.com/voip-app/internal/discovery"
+	"github.com/voip-app/internal/signaling"
 	"github.com/voip-app/internal/storage"
 )
 
 type App struct {
-	ctx        context.Context
-	cfg        config.Config
-	storage    storage.Storage
-	channelMgr *channel.Manager
-	discoverer *discovery.Discoverer
+	ctx            context.Context
+	cfg            config.Config
+	storage        storage.Storage
+	channelMgr     *channel.Manager
+	signalingClient *signaling.SignalingClient
 }
 
 func NewApp() *App {
@@ -28,6 +25,12 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.cfg = config.Load()
+	a.cfg.AppMode = config.AppModeHosted
+	a.cfg.StorageType = config.StorageTypeMongoDB
+
+	if a.cfg.MongoDBURI == "" {
+		log.Fatal("VOIP_MONGODB_URI is required for hosted mode")
+	}
 
 	s, err := a.initStorage()
 	if err != nil {
@@ -41,36 +44,32 @@ func (a *App) startup(ctx context.Context) {
 		log.Printf("Failed to init channels: %v", err)
 	}
 
-	if a.cfg.NetworkMode == config.NetworkModeLAN {
-		d, err := discovery.NewDiscoverer(a.cfg.Username, a.cfg.Port)
-		if err != nil {
-			log.Printf("Failed to start discovery: %v", err)
-		} else {
-			a.discoverer = d
-			go a.discoverPeers()
-		}
+	if a.cfg.ServerAddr != "" {
+		go a.connectSignaling()
+	}
+}
+
+func (a *App) shutdown(ctx context.Context) {
+	if a.signalingClient != nil {
+		a.signalingClient.Close()
+	}
+	if a.storage != nil {
+		a.storage.Close()
 	}
 }
 
 func (a *App) initStorage() (storage.Storage, error) {
-	dbDir := a.cfg.DataDir
-	if err := os.MkdirAll(dbDir, 0755); err != nil {
-		return nil, err
-	}
-	return storage.NewSQLiteStorage(filepath.Join(dbDir, "voip.db"))
+	return storage.NewMongoDBStorage(a.cfg.MongoDBURI)
 }
 
-func (a *App) discoverPeers() {
-	for {
-		peers, err := a.discoverer.DiscoverWithTimeout(10 * time.Second)
-		if err != nil {
-			log.Printf("Discovery error: %v", err)
-			continue
-		}
-		if len(peers) > 0 {
-			log.Printf("Discovered %d peer(s)", len(peers))
-		}
+func (a *App) connectSignaling() {
+	client, err := signaling.NewSignalingClient(a.cfg.ServerAddr)
+	if err != nil {
+		log.Printf("Failed to connect to signaling server: %v", err)
+		return
 	}
+	a.signalingClient = client
+	log.Printf("Connected to signaling server at %s", a.cfg.ServerAddr)
 }
 
 func (a *App) GetChannels() []channel.ChannelInfo {
@@ -106,13 +105,4 @@ func (a *App) RenameChannel(id, newName string) error {
 
 func (a *App) GetConfig() config.Config {
 	return a.cfg
-}
-
-func (a *App) Shutdown() {
-	if a.discoverer != nil {
-		a.discoverer.Close()
-	}
-	if a.storage != nil {
-		a.storage.Close()
-	}
 }

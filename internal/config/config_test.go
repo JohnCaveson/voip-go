@@ -68,24 +68,50 @@ func TestDefaultStorageType(t *testing.T) {
 	if cfg.StorageType != StorageTypeSQLite {
 		t.Errorf("expected sqlite, got %s", cfg.StorageType)
 	}
-	if cfg.MySQLDSN == "" {
-		t.Error("expected default MySQL DSN")
+	if cfg.MongoDBURI == "" {
+		t.Error("expected default MongoDB URI")
 	}
 }
 
-func TestLoadMySQLConfig(t *testing.T) {
-	os.Setenv("VOIP_STORAGE_TYPE", "mysql")
-	os.Setenv("VOIP_MYSQL_DSN", "user:pass@tcp(10.0.0.1:3306)/voip?parseTime=true")
-	defer os.Unsetenv("VOIP_STORAGE_TYPE")
-	defer os.Unsetenv("VOIP_MYSQL_DSN")
+func TestDefaultAppMode(t *testing.T) {
+	cfg := DefaultConfig()
+	if cfg.AppMode != AppModeP2P {
+		t.Errorf("expected p2p mode, got %s", cfg.AppMode)
+	}
+	if cfg.MongoDBURI == "" {
+		t.Error("expected default MongoDB URI")
+	}
+}
+
+func TestLoadHostedMode(t *testing.T) {
+	os.Setenv("VOIP_APP_MODE", "hosted")
+	os.Setenv("VOIP_MONGODB_URI", "mongodb://10.0.0.1:27017")
+	defer os.Unsetenv("VOIP_APP_MODE")
+	defer os.Unsetenv("VOIP_MONGODB_URI")
 
 	cfg := Load()
 
-	if cfg.StorageType != StorageTypeMySQL {
-		t.Errorf("expected mysql, got %s", cfg.StorageType)
+	if cfg.AppMode != AppModeHosted {
+		t.Errorf("expected hosted mode, got %s", cfg.AppMode)
 	}
-	if cfg.MySQLDSN != "user:pass@tcp(10.0.0.1:3306)/voip?parseTime=true" {
-		t.Errorf("unexpected DSN: %s", cfg.MySQLDSN)
+	if cfg.MongoDBURI != "mongodb://10.0.0.1:27017" {
+		t.Errorf("unexpected MongoDB URI: %s", cfg.MongoDBURI)
+	}
+}
+
+func TestLoadMongoDBStorageType(t *testing.T) {
+	os.Setenv("VOIP_STORAGE_TYPE", "mongodb")
+	os.Setenv("VOIP_MONGODB_URI", "mongodb://db.example.com:27017/voip")
+	defer os.Unsetenv("VOIP_STORAGE_TYPE")
+	defer os.Unsetenv("VOIP_MONGODB_URI")
+
+	cfg := Load()
+
+	if cfg.StorageType != StorageTypeMongoDB {
+		t.Errorf("expected mongodb, got %s", cfg.StorageType)
+	}
+	if cfg.MongoDBURI != "mongodb://db.example.com:27017/voip" {
+		t.Errorf("unexpected MongoDB URI: %s", cfg.MongoDBURI)
 	}
 }
 
