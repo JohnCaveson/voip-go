@@ -62,39 +62,46 @@ func (d *Discoverer) Discover(ctx context.Context) ([]PeerInfo, error) {
 	}()
 
 	var peers []PeerInfo
-	for entry := range entriesCh {
-		username := ""
-		signalingAddr := ""
-		for _, field := range entry.InfoFields {
-			if len(field) > 0 && field[0] == '@' {
-				signalingAddr = field[1:]
-			} else {
-				username = field
+	for {
+		select {
+		case <-ctx.Done():
+			return peers, ctx.Err()
+		case entry, ok := <-entriesCh:
+			if !ok {
+				return peers, nil
+			}
+
+			username := ""
+			signalingAddr := ""
+			for _, field := range entry.InfoFields {
+				if len(field) > 0 && field[0] == '@' {
+					signalingAddr = field[1:]
+				} else {
+					username = field
+				}
+			}
+
+			peer := PeerInfo{
+				ID:            entry.Host,
+				Username:      username,
+				Addr:          entry.AddrV4,
+				Port:          entry.Port,
+				SignalingAddr: signalingAddr,
+			}
+
+			if entry.AddrV4 == nil {
+				peer.Addr = entry.AddrV6
+			}
+
+			if peer.SignalingAddr == "" && peer.Addr != nil {
+				peer.SignalingAddr = fmt.Sprintf("ws://%s:%d/signaling", peer.Addr.String(), peer.Port)
+			}
+
+			if peer.Addr != nil {
+				peers = append(peers, peer)
 			}
 		}
-
-		peer := PeerInfo{
-			ID:            entry.Host,
-			Username:      username,
-			Addr:          entry.AddrV4,
-			Port:          entry.Port,
-			SignalingAddr: signalingAddr,
-		}
-
-		if entry.AddrV4 == nil {
-			peer.Addr = entry.AddrV6
-		}
-
-		if peer.SignalingAddr == "" && peer.Addr != nil {
-			peer.SignalingAddr = fmt.Sprintf("ws://%s:%d/signaling", peer.Addr.String(), peer.Port)
-		}
-
-		if peer.Addr != nil {
-			peers = append(peers, peer)
-		}
 	}
-
-	return peers, nil
 }
 
 func (d *Discoverer) DiscoverWithTimeout(timeout time.Duration) ([]PeerInfo, error) {

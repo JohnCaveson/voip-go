@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/voip-app/internal/models"
+	"github.com/voip-app/pkg/models"
 	"github.com/voip-app/internal/storage"
 )
 

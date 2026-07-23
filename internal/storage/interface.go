@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/voip-app/internal/models"
+	"github.com/voip-app/pkg/models"
 )
 
 type ChannelStore interface {

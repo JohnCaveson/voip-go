@@ -3,7 +3,7 @@ package channel
 import (
 	"testing"
 
-	"github.com/voip-app/internal/models"
+	"github.com/voip-app/pkg/models"
 )
 
 func TestParseTypeText(t *testing.T) {

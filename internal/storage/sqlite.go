@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/voip-app/internal/models"
+	"github.com/voip-app/pkg/models"
 
 	_ "modernc.org/sqlite"
 )
@@ -93,7 +93,10 @@ func (s *SQLiteStorage) GetChannel(ctx context.Context, id string) (*models.Chan
 		return nil, err
 	}
 
-	ch.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+	ch.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+	if err != nil {
+		return nil, fmt.Errorf("parse channel created_at: %w", err)
+	}
 	ch.Deleted = intToBool(deletedInt)
 	return ch, nil
 }
@@ -115,7 +118,10 @@ func (s *SQLiteStorage) ListChannels(ctx context.Context) ([]*models.Channel, er
 		if err := rows.Scan(&ch.ID, &ch.Name, (*string)(&ch.Type), &ch.IsDefault, &createdAt, &deletedInt); err != nil {
 			return nil, err
 		}
-		ch.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+		ch.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return nil, fmt.Errorf("parse channel created_at: %w", err)
+		}
 		ch.Deleted = intToBool(deletedInt)
 		channels = append(channels, ch)
 	}
@@ -167,7 +173,10 @@ func (s *SQLiteStorage) ListMessages(ctx context.Context, channelID string, limi
 		if err := rows.Scan(&msg.ID, &msg.ChannelID, &msg.UserID, &msg.Username, &msg.Content, &createdAt); err != nil {
 			return nil, err
 		}
-		msg.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+		msg.CreatedAt, err = time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return nil, fmt.Errorf("parse message created_at: %w", err)
+		}
 		messages = append(messages, msg)
 	}
 
@@ -204,7 +213,10 @@ func (s *SQLiteStorage) GetUser(ctx context.Context, id string) (*models.User, e
 		return nil, err
 	}
 
-	user.JoinedAt, _ = time.Parse(time.RFC3339, joinedAt)
+	user.JoinedAt, err = time.Parse(time.RFC3339, joinedAt)
+	if err != nil {
+		return nil, fmt.Errorf("parse user joined_at: %w", err)
+	}
 	return user, nil
 }
 
@@ -224,7 +236,10 @@ func (s *SQLiteStorage) ListUsers(ctx context.Context) ([]*models.User, error) {
 		if err := rows.Scan(&user.ID, &user.Username, &joinedAt, &user.IsOnline); err != nil {
 			return nil, err
 		}
-		user.JoinedAt, _ = time.Parse(time.RFC3339, joinedAt)
+		user.JoinedAt, err = time.Parse(time.RFC3339, joinedAt)
+		if err != nil {
+			return nil, fmt.Errorf("parse user joined_at: %w", err)
+		}
 		users = append(users, user)
 	}
 

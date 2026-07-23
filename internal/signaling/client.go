@@ -2,7 +2,6 @@ package signaling
 
 import (
 	"encoding/json"
-	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -70,19 +69,6 @@ func (c *SignalingClient) On(event string, handler func(api.SignalingMessage)) {
 	c.handlers[event] = append(c.handlers[event], handler)
 }
 
-func (c *SignalingClient) Off(event string, handler func(api.SignalingMessage)) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	handlers := c.handlers[event]
-	for i, h := range handlers {
-		if &h == &handler {
-			c.handlers[event] = append(handlers[:i], handlers[i+1:]...)
-			break
-		}
-	}
-}
-
 func (c *SignalingClient) trigger(event string, msg api.SignalingMessage) {
 	c.mu.Lock()
 	handlers := c.handlers[event]
@@ -144,5 +130,3 @@ func (c *SignalingClient) SendTextMessage(channelID, content string) error {
 		Content:   content,
 	})
 }
-
-var _ = log.Printf

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/voip-app/internal/models"
+	"github.com/voip-app/pkg/models"
 )
 
 func newTestDB(t *testing.T) *SQLiteStorage {

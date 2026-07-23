@@ -76,7 +76,11 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) shutdown(ctx context.Context) {
 	if a.httpServer != nil {
-		a.httpServer.Close()
+		shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Printf("Signaling server shutdown error: %v", err)
+		}
 	}
 	if a.discoverer != nil {
 		a.discoverer.Close()

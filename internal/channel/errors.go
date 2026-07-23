@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/voip-app/internal/models"
+	"github.com/voip-app/pkg/models"
 )
 
 var (
@@ -14,13 +14,6 @@ var (
 	ErrEmptyName     = errors.New("room name cannot be empty")
 	ErrInvalidType   = errors.New("invalid room type")
 )
-
-type ChannelInfo struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	IsDefault bool   `json:"is_default"`
-}
 
 func ParseType(s string) models.ChannelType {
 	switch strings.ToLower(s) {

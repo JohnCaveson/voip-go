@@ -1,6 +1,6 @@
 package api
 
-import "github.com/voip-app/internal/models"
+import "github.com/voip-app/pkg/models"
 
 type MessageType string
 

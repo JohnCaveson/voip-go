@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/voip-app/internal/models"
+	"github.com/google/uuid"
+	"github.com/voip-app/pkg/models"
 	"github.com/voip-app/internal/storage"
 )
 
@@ -81,7 +82,7 @@ func (m *Manager) Create(ctx context.Context, name string, chType models.Channel
 	}
 
 	ch := &models.Channel{
-		ID:        fmt.Sprintf("ch-%d", time.Now().UnixNano()),
+		ID:        "ch-" + uuid.New().String(),
 		Name:      name,
 		Type:      chType,
 		IsDefault: false,
