@@ -118,29 +118,159 @@ wails dev -tags webkit2_41
 
 ---
 
-## Building for Production
+## Running Over a Local Network
 
-### P2P App
+Once built, anyone on your LAN can connect to the app. Here's how:
+
+### 1. Build the App
 
 ```bash
-wails build -tags webkit2_41 -o gather-p2p
-./build/bin/gather-p2p
+wails build -tags webkit2_41 -o gather
 ```
 
-### Hosted App
+### 2. Find Your Local IP
 
 ```bash
-wails build -tags webkit2_41 -o gather-hosted
+# Linux
+ip addr show | grep "inet " | grep -v 127.0.0.1
 
-# Start backend services first
-docker compose up -d
+# macOS
+ipconfig getifaddr en0
 
-# Run the app
+# Windows
+ipconfig
+```
+
+Note your IP (e.g., `192.168.1.50`).
+
+### 3. Run the App
+
+```bash
+./build/bin/gather
+```
+
+The app starts a signaling server on port 9321 and advertises via mDNS.
+
+### 4. Connect from Another Machine
+
+On the other machine, either:
+- **Run the same binary** — it will discover peers automatically via mDNS and show them in the sidebar under "Peers Nearby"
+- **Or distribute the binary** — copy `build/bin/gather` to the other machine (same OS/architecture), run it, and it will find the first peer via mDNS
+
+Both peers need to be on the same subnet for mDNS discovery to work.
+
+### 5. Start Talking
+
+1. Both users enter a username when prompted
+2. Click on an audio room (e.g., "Lounge")
+3. Click the join button ("Start Yapping", "Hop In", etc.)
+4. Your microphone activates and WebRTC establishes a peer-to-peer audio connection
+5. Text chat also works — messages are relayed through the signaling server
+
+### Firewall Notes
+
+If peers can't discover each other, allow these ports:
+
+```bash
+# Linux (ufw)
+sudo ufw allow 9321/tcp    # Signaling server
+sudo ufw allow 5353/udp    # mDNS discovery
+
+# macOS — System Preferences > Security > Firewall
+# Allow incoming connections for the Gather app
+```
+
+### Custom Username
+
+Set your display name via environment variable instead of using the modal:
+
+```bash
+VOIP_USERNAME=YourName ./build/bin/gather
+```
+
+---
+
+## Running Over the Internet (WAN)
+
+> **Coming soon.** The hosted mode with Docker Compose is the foundation for this.
+
+To let friends connect over the internet:
+
+1. **Deploy the signaling server** to a VPS (DigitalOcean, Hetzner, etc.)
+2. **Run MongoDB + signaling** via Docker Compose on the server
+3. **Open port 9321** in the server's firewall
+4. **Run the app** in hosted mode on each client:
+
+```bash
 VOIP_APP_MODE=hosted \
-VOIP_MONGODB_URI=mongodb://localhost:27017 \
-VOIP_SERVER_ADDR=ws://localhost:9321/signaling \
+VOIP_SERVER_ADDR=ws://your-server-ip:9321/signaling \
+VOIP_USERNAME=YourName \
 ./build/bin/gather-hosted
 ```
+
+This requires the `gather-hosted` build (see [Building for Production](#building-for-production)).
+
+For NAT traversal on peer-to-peer audio (when both clients are behind routers), a TURN server is needed. See the `VOIP_TURN_*` environment variables.
+
+---
+
+## Building for Production
+
+### Build Commands
+
+```bash
+# Build for current platform
+wails build -tags webkit2_41 -o gather
+
+# Cross-compile for a specific platform
+wails build -tags webkit2_41 -o gather -platform <target>
+```
+
+The output is a single binary in `build/bin/`. No installer needed — just copy and run.
+
+### Supported Platforms
+
+| Target | Command | Notes |
+|---|---|---|
+| Linux (amd64) | `-platform linux/amd64` | Requires webkit2gtk on target machine |
+| Linux (arm64) | `-platform linux/arm64` | For Raspberry Pi, ARM servers |
+| macOS (amd64) | `-platform darwin/amd64` | Intel Macs |
+| macOS (arm64) | `-platform darwin/arm64` | Apple Silicon (M1/M2/M3) |
+| Windows (amd64) | `-platform windows/amd64` | Requires WebView2 (usually pre-installed) |
+
+### Building Both Modes
+
+```bash
+# P2P mode (standalone, no server needed)
+wails build -tags webkit2_41 -o gather-p2p
+
+# Hosted mode (connects to remote signaling server)
+wails build -tags webkit2_41 -o gather-hosted
+```
+
+### Distributing the App
+
+**Wails produces a single executable** — no installer, no framework dependencies on the target (except system libraries):
+
+```bash
+# Build for your platform
+wails build -tags webkit2_41 -o gather
+
+# The binary is here:
+ls build/bin/gather
+
+# Copy it anywhere — USB, shared folder, SCP, etc.
+scp build/bin/gather friend@192.168.1.60:~/
+```
+
+**What your friend needs:**
+- **Linux:** `webkit2gtk-4.1` installed (`sudo apt install libwebkit2gtk-4.1-0`)
+- **macOS:** Nothing extra — the binary is self-contained
+- **Windows:** WebView2 (comes with Windows 10/11)
+
+That's it. They run the binary, enter a username, and they're in.
+
+---
 
 ### Standalone Signaling Server
 

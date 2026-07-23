@@ -1,4 +1,4 @@
-import type { Channel } from '../App'
+import type { Channel, Peer } from '../App'
 
 type SidebarProps = {
   channels: Channel[]
@@ -6,9 +6,11 @@ type SidebarProps = {
   onSelectChannel: (id: string) => void
   onAddChannel: () => void
   appMode: string
+  peers: Peer[]
+  username: string
 }
 
-function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel, appMode }: SidebarProps) {
+function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel, appMode, peers, username }: SidebarProps) {
   const chatRooms = channels.filter(c => c.type === 'text')
   const audioRooms = channels.filter(c => c.type === 'voice')
   const isP2P = appMode === 'p2p'
@@ -56,6 +58,27 @@ function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel, app
             {ch.name}
           </div>
         ))}
+      </div>
+
+      {isP2P && peers.length > 0 && (
+        <div className="room-group">
+          <div className="room-group-header">
+            <span>Peers Nearby</span>
+          </div>
+          {peers.map(peer => (
+            <div key={peer.id} className="room-item peer">
+              <span className="peer-dot" />
+              {peer.username}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="sidebar-footer">
+        <div className="sidebar-user">
+          <div className="user-online-dot" />
+          <span>{username}</span>
+        </div>
       </div>
     </div>
   )

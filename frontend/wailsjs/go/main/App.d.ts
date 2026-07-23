@@ -11,6 +11,10 @@ export function GetChannels():Promise<Array<channel.ChannelInfo>>;
 
 export function GetConfig():Promise<config.Config>;
 
+export function GetDiscoveredPeers():Promise<Array<main.Peer>>;
+
+export function GetSignalingURL():Promise<string>;
+
 export function RenameChannel(arg1:string,arg2:string):Promise<void>;
 
 export function Shutdown():Promise<void>;

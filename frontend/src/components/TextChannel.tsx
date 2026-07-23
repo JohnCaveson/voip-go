@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Channel } from '../App'
+import { useSignaling } from '../hooks/useSignaling'
 
 type Message = {
   id: string
@@ -10,28 +11,55 @@ type Message = {
 
 type TextChannelProps = {
   channel: Channel
+  signalingURL: string
+  username: string
 }
 
-function TextChannel({ channel }: TextChannelProps) {
+function TextChannel({ channel, signalingURL, username }: TextChannelProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const userIdRef = useRef('')
+
+  const { sendTextMessage, userId } = useSignaling({
+    serverUrl: signalingURL,
+    room: channel.id,
+    username,
+    onMessage: (msg) => {
+      if (msg.channelId !== channel.id) return
+      const isOwn = msg.senderId === userIdRef.current
+      setMessages(prev => [...prev, {
+        id: `msg-${Date.now()}-${Math.random()}`,
+        username: isOwn ? username : msg.senderId,
+        content: msg.content,
+        created_at: new Date().toISOString(),
+      }])
+    },
+  })
+
+  useEffect(() => {
+    if (userId) userIdRef.current = userId
+  }, [userId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    setMessages([])
+  }, [channel.id])
+
   const handleSend = () => {
     if (!input.trim()) return
 
-    const msg: Message = {
-      id: `msg-${Date.now()}`,
-      username: 'You',
+    sendTextMessage(channel.id, input.trim())
+
+    setMessages(prev => [...prev, {
+      id: `msg-${Date.now()}-${Math.random()}`,
+      username,
       content: input.trim(),
       created_at: new Date().toISOString(),
-    }
-
-    setMessages(prev => [...prev, msg])
+    }])
     setInput('')
   }
 
@@ -47,6 +75,7 @@ function TextChannel({ channel }: TextChannelProps) {
       <div className="room-header">
         <span className="room-icon">💬</span>
         {channel.name}
+        <span className="ephemeral-note">Messages are not persisted</span>
       </div>
 
       <div className="messages">

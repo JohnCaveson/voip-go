@@ -2,27 +2,45 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/voip-app/internal/channel"
 	"github.com/voip-app/internal/config"
 	"github.com/voip-app/internal/discovery"
+	"github.com/voip-app/internal/signaling"
 	"github.com/voip-app/internal/storage"
 )
 
+type Peer struct {
+	ID            string `json:"id"`
+	Username      string `json:"username"`
+	Addr          string `json:"addr"`
+	SignalingAddr string `json:"signaling_addr"`
+}
+
 type App struct {
-	ctx        context.Context
-	cfg        config.Config
-	storage    storage.Storage
-	channelMgr *channel.Manager
-	discoverer *discovery.Discoverer
+	ctx          context.Context
+	cfg          config.Config
+	storage      storage.Storage
+	channelMgr   *channel.Manager
+	discoverer   *discovery.Discoverer
+	hub          *signaling.Hub
+	httpServer   *http.Server
+	signalingURL string
+	mu           sync.RWMutex
+	peers        map[string]Peer
 }
 
 func NewApp() *App {
-	return &App{}
+	return &App{
+		peers: make(map[string]Peer),
+	}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -43,8 +61,10 @@ func (a *App) startup(ctx context.Context) {
 		log.Printf("Failed to init channels: %v", err)
 	}
 
+	a.startSignalingServer()
+
 	if a.cfg.NetworkMode == config.NetworkModeLAN {
-		d, err := discovery.NewDiscoverer(a.cfg.Username, a.cfg.Port)
+		d, err := discovery.NewDiscoverer(a.cfg.Username, a.cfg.Port, a.signalingURL)
 		if err != nil {
 			log.Printf("Failed to start discovery: %v", err)
 		} else {
@@ -55,12 +75,32 @@ func (a *App) startup(ctx context.Context) {
 }
 
 func (a *App) shutdown(ctx context.Context) {
+	if a.httpServer != nil {
+		a.httpServer.Close()
+	}
 	if a.discoverer != nil {
 		a.discoverer.Close()
 	}
 	if a.storage != nil {
 		a.storage.Close()
 	}
+}
+
+func (a *App) startSignalingServer() {
+	a.hub = signaling.NewHub()
+	mux := http.NewServeMux()
+	mux.Handle("/signaling", a.hub)
+
+	addr := fmt.Sprintf(":%d", a.cfg.Port)
+	a.httpServer = &http.Server{Addr: addr, Handler: mux}
+	a.signalingURL = fmt.Sprintf("ws://localhost:%d/signaling", a.cfg.Port)
+
+	go func() {
+		log.Printf("Signaling server starting on %s", addr)
+		if err := a.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("Signaling server error: %v", err)
+		}
+	}()
 }
 
 func (a *App) initStorage() (storage.Storage, error) {
@@ -78,6 +118,21 @@ func (a *App) discoverPeers() {
 			log.Printf("Discovery error: %v", err)
 			continue
 		}
+
+		a.mu.Lock()
+		for _, p := range peers {
+			if p.Username == a.cfg.Username {
+				continue
+			}
+			a.peers[p.ID] = Peer{
+				ID:            p.ID,
+				Username:      p.Username,
+				Addr:          p.Addr.String(),
+				SignalingAddr: p.SignalingAddr,
+			}
+		}
+		a.mu.Unlock()
+
 		if len(peers) > 0 {
 			log.Printf("Discovered %d peer(s)", len(peers))
 		}
@@ -117,4 +172,19 @@ func (a *App) RenameChannel(id, newName string) error {
 
 func (a *App) GetConfig() config.Config {
 	return a.cfg
+}
+
+func (a *App) GetDiscoveredPeers() []Peer {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	var result []Peer
+	for _, p := range a.peers {
+		result = append(result, p)
+	}
+	return result
+}
+
+func (a *App) GetSignalingURL() string {
+	return a.signalingURL
 }

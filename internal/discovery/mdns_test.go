@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewDiscoverer(t *testing.T) {
-	d, err := NewDiscoverer("testuser", 9321)
+	d, err := NewDiscoverer("testuser", 9321, "ws://localhost:9321/signaling")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -14,7 +14,7 @@ func TestNewDiscoverer(t *testing.T) {
 }
 
 func TestDiscoverWithTimeout(t *testing.T) {
-	d1, err := NewDiscoverer("user1", 9321)
+	d1, err := NewDiscoverer("user1", 9321, "ws://localhost:9321/signaling")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestDiscoverWithTimeout(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
-	d, err := NewDiscoverer("testuser", 9321)
+	d, err := NewDiscoverer("testuser", 9321, "ws://localhost:9321/signaling")
 	if err != nil {
 		t.Fatal(err)
 	}

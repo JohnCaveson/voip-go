@@ -42,7 +42,7 @@ func (a *App) startup(ctx context.Context) {
 	}
 
 	if a.cfg.NetworkMode == config.NetworkModeLAN {
-		d, err := discovery.NewDiscoverer(a.cfg.Username, a.cfg.Port)
+		d, err := discovery.NewDiscoverer(a.cfg.Username, a.cfg.Port, "")
 		if err != nil {
 			log.Printf("Failed to start discovery: %v", err)
 		} else {

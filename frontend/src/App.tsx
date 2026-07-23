@@ -4,8 +4,9 @@ import Sidebar from './components/Sidebar'
 import TextChannel from './components/TextChannel'
 import VoiceChannel from './components/VoiceChannel'
 import AddChannelModal from './components/AddChannelModal'
+import UsernameModal from './components/UsernameModal'
 import ConnectionStatus from './components/ConnectionStatus'
-import { GetConfig, GetChannels } from '../wailsjs/go/main/App'
+import { GetConfig, GetChannels, GetDiscoveredPeers, GetSignalingURL } from '../wailsjs/go/main/App'
 
 export type Channel = {
   id: string
@@ -14,10 +15,11 @@ export type Channel = {
   is_default: boolean
 }
 
-export type User = {
+export type Peer = {
   id: string
   username: string
-  is_online: boolean
+  addr: string
+  signaling_addr: string
 }
 
 export type AppConfig = {
@@ -33,11 +35,29 @@ function App() {
   const [activeChannelId, setActiveChannelId] = useState('default-text')
   const [showAddModal, setShowAddModal] = useState(false)
   const [config, setConfig] = useState<AppConfig | null>(null)
+  const [peers, setPeers] = useState<Peer[]>([])
+  const [signalingURL, setSignalingURL] = useState('')
+  const [username, setUsername] = useState<string | null>(() => localStorage.getItem('gather-username'))
+  const [showUsernameModal, setShowUsernameModal] = useState(false)
 
   useEffect(() => {
     loadConfig()
     loadChannels()
+    loadSignalingURL()
   }, [])
+
+  useEffect(() => {
+    if (username === null) {
+      setShowUsernameModal(true)
+    }
+  }, [username])
+
+  useEffect(() => {
+    if (config?.AppMode !== 'p2p') return
+    const interval = setInterval(loadPeers, 5000)
+    loadPeers()
+    return () => clearInterval(interval)
+  }, [config])
 
   const loadConfig = async () => {
     try {
@@ -78,7 +98,31 @@ function App() {
     }
   }
 
+  const loadPeers = async () => {
+    try {
+      const p = await GetDiscoveredPeers()
+      setPeers(p || [])
+    } catch (err) {
+      console.error('Failed to load peers:', err)
+    }
+  }
+
+  const loadSignalingURL = async () => {
+    try {
+      const url = await GetSignalingURL()
+      setSignalingURL(url)
+    } catch (err) {
+      console.error('Failed to get signaling URL:', err)
+    }
+  }
+
   const activeChannel = channels.find(c => c.id === activeChannelId)
+
+  const handleSetUsername = (name: string) => {
+    localStorage.setItem('gather-username', name)
+    setUsername(name)
+    setShowUsernameModal(false)
+  }
 
   const handleAddChannel = async (name: string, type: 'text' | 'voice') => {
     try {
@@ -104,13 +148,23 @@ function App() {
         onSelectChannel={setActiveChannelId}
         onAddChannel={() => setShowAddModal(true)}
         appMode={config?.AppMode ?? 'p2p'}
+        peers={peers}
+        username={username ?? 'anonymous'}
       />
       <div className="main-content">
         {activeChannel?.type === 'text' && (
-          <TextChannel channel={activeChannel} />
+          <TextChannel
+            channel={activeChannel}
+            signalingURL={signalingURL}
+            username={config?.Username ?? 'anonymous'}
+          />
         )}
         {activeChannel?.type === 'voice' && (
-          <VoiceChannel channel={activeChannel} />
+          <VoiceChannel
+            channel={activeChannel}
+            signalingURL={signalingURL}
+            username={username ?? 'anonymous'}
+          />
         )}
         <ConnectionStatus config={config} />
       </div>
@@ -119,6 +173,9 @@ function App() {
           onClose={() => setShowAddModal(false)}
           onConfirm={handleAddChannel}
         />
+      )}
+      {showUsernameModal && (
+        <UsernameModal onConfirm={handleSetUsername} />
       )}
     </div>
   )

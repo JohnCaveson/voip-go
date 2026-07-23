@@ -18,6 +18,14 @@ export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
 
+export function GetDiscoveredPeers() {
+  return window['go']['main']['App']['GetDiscoveredPeers']();
+}
+
+export function GetSignalingURL() {
+  return window['go']['main']['App']['GetSignalingURL']();
+}
+
 export function RenameChannel(arg1, arg2) {
   return window['go']['main']['App']['RenameChannel'](arg1, arg2);
 }

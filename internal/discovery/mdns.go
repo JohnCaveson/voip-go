@@ -12,10 +12,11 @@ import (
 const serviceName = "_voip-app._tcp"
 
 type PeerInfo struct {
-	ID       string
-	Username string
-	Addr     net.IP
-	Port     int
+	ID            string
+	Username      string
+	Addr          net.IP
+	Port          int
+	SignalingAddr string
 }
 
 type Discoverer struct {
@@ -23,8 +24,11 @@ type Discoverer struct {
 	entries chan *mdns.ServiceEntry
 }
 
-func NewDiscoverer(username string, port int) (*Discoverer, error) {
+func NewDiscoverer(username string, port int, signalingAddr string) (*Discoverer, error) {
 	info := []string{username}
+	if signalingAddr != "" {
+		info = append(info, "@"+signalingAddr)
+	}
 	service, err := mdns.NewMDNSService(
 		username,
 		serviceName,
@@ -60,19 +64,29 @@ func (d *Discoverer) Discover(ctx context.Context) ([]PeerInfo, error) {
 	var peers []PeerInfo
 	for entry := range entriesCh {
 		username := ""
-		if len(entry.InfoFields) > 0 {
-			username = entry.InfoFields[0]
+		signalingAddr := ""
+		for _, field := range entry.InfoFields {
+			if len(field) > 0 && field[0] == '@' {
+				signalingAddr = field[1:]
+			} else {
+				username = field
+			}
 		}
 
 		peer := PeerInfo{
-			ID:       entry.Host,
-			Username: username,
-			Addr:     entry.AddrV4,
-			Port:     entry.Port,
+			ID:            entry.Host,
+			Username:      username,
+			Addr:          entry.AddrV4,
+			Port:          entry.Port,
+			SignalingAddr: signalingAddr,
 		}
 
 		if entry.AddrV4 == nil {
 			peer.Addr = entry.AddrV6
+		}
+
+		if peer.SignalingAddr == "" && peer.Addr != nil {
+			peer.SignalingAddr = fmt.Sprintf("ws://%s:%d/signaling", peer.Addr.String(), peer.Port)
 		}
 
 		if peer.Addr != nil {
