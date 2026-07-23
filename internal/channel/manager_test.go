@@ -46,7 +46,7 @@ func TestInitCreatesDefaults(t *testing.T) {
 	}
 
 	if len(channels) != 2 {
-		t.Fatalf("expected 2 default channels, got %d", len(channels))
+		t.Fatalf("expected 2 default rooms, got %d", len(channels))
 	}
 
 	names := make(map[string]*models.Channel)
@@ -54,11 +54,11 @@ func TestInitCreatesDefaults(t *testing.T) {
 		names[ch.Name] = ch
 	}
 
-	if _, ok := names[DefaultTextChannelName]; !ok {
-		t.Errorf("missing default text channel: %s", DefaultTextChannelName)
+	if _, ok := names[DefaultChatRoomName]; !ok {
+		t.Errorf("missing default chat room: %s", DefaultChatRoomName)
 	}
-	if _, ok := names[DefaultVoiceChannelName]; !ok {
-		t.Errorf("missing default voice channel: %s", DefaultVoiceChannelName)
+	if _, ok := names[DefaultAudioRoomName]; !ok {
+		t.Errorf("missing default audio room: %s", DefaultAudioRoomName)
 	}
 }
 
@@ -79,7 +79,7 @@ func TestInitIdempotent(t *testing.T) {
 	}
 
 	if len(channels) != 2 {
-		t.Errorf("expected 2 channels after second init, got %d", len(channels))
+		t.Errorf("expected 2 rooms after second init, got %d", len(channels))
 	}
 }
 
@@ -91,21 +91,21 @@ func TestCreateChannel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ch, err := m.Create(ctx, "#random", models.ChannelTypeText)
+	ch, err := m.Create(ctx, "Random", models.ChannelTypeText)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if ch.Name != "#random" {
-		t.Errorf("expected #random, got %s", ch.Name)
+	if ch.Name != "Random" {
+		t.Errorf("expected Random, got %s", ch.Name)
 	}
 	if ch.IsDefault {
-		t.Error("new channel should not be default")
+		t.Error("new room should not be default")
 	}
 
 	channels, _ := m.List(ctx)
 	if len(channels) != 3 {
-		t.Errorf("expected 3 channels, got %d", len(channels))
+		t.Errorf("expected 3 rooms, got %d", len(channels))
 	}
 }
 
@@ -117,7 +117,7 @@ func TestCreateDuplicateName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := m.Create(ctx, DefaultTextChannelName, models.ChannelTypeText)
+	_, err := m.Create(ctx, DefaultChatRoomName, models.ChannelTypeText)
 	if err != ErrDuplicateName {
 		t.Errorf("expected ErrDuplicateName, got %v", err)
 	}
@@ -137,7 +137,7 @@ func TestCreateInvalidType(t *testing.T) {
 	m := newTestManager(t)
 	ctx := context.Background()
 
-	_, err := m.Create(ctx, "#test", models.ChannelType("invalid"))
+	_, err := m.Create(ctx, "test", models.ChannelType("invalid"))
 	if err != ErrInvalidType {
 		t.Errorf("expected ErrInvalidType, got %v", err)
 	}
@@ -170,7 +170,7 @@ func TestDeleteNonDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ch, err := m.Create(ctx, "#random", models.ChannelTypeText)
+	ch, err := m.Create(ctx, "Random", models.ChannelTypeText)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,13 +206,13 @@ func TestRename(t *testing.T) {
 	channels, _ := m.List(ctx)
 	textCh := channels[0]
 
-	if err := m.Rename(ctx, textCh.ID, "#new-name"); err != nil {
+	if err := m.Rename(ctx, textCh.ID, "New Name"); err != nil {
 		t.Fatal(err)
 	}
 
 	updated, _ := m.Get(ctx, textCh.ID)
-	if updated.Name != "#new-name" {
-		t.Errorf("expected #new-name, got %s", updated.Name)
+	if updated.Name != "New Name" {
+		t.Errorf("expected New Name, got %s", updated.Name)
 	}
 }
 
@@ -224,10 +224,10 @@ func TestRenameDuplicate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ch1, _ := m.Create(ctx, "#ch1", models.ChannelTypeText)
-	m.Create(ctx, "#ch2", models.ChannelTypeText)
+	ch1, _ := m.Create(ctx, "Room1", models.ChannelTypeText)
+	m.Create(ctx, "Room2", models.ChannelTypeText)
 
-	err := m.Rename(ctx, ch1.ID, "#ch2")
+	err := m.Rename(ctx, ch1.ID, "Room2")
 	if err != ErrDuplicateName {
 		t.Errorf("expected ErrDuplicateName, got %v", err)
 	}

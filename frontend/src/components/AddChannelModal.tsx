@@ -17,21 +17,21 @@ function AddChannelModal({ onClose, onConfirm }: AddChannelModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h3>Add Channel</h3>
+        <h3>New Room</h3>
 
         <div>
-          <label>Channel Type</label>
+          <label>Room Type</label>
           <select value={type} onChange={e => setType(e.target.value as 'text' | 'voice')}>
-            <option value="text">Text</option>
-            <option value="voice">Voice</option>
+            <option value="text">Chat</option>
+            <option value="voice">Audio</option>
           </select>
         </div>
 
         <div>
-          <label>Channel Name</label>
+          <label>Room Name</label>
           <input
             type="text"
-            placeholder={type === 'text' ? 'channel-name' : 'Channel Name'}
+            placeholder="e.g. Game Night"
             value={name}
             onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleConfirm()}

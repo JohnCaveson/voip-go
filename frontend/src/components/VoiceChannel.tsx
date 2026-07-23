@@ -67,15 +67,15 @@ function VoiceChannel({ channel }: VoiceChannelProps) {
 
   return (
     <>
-      <div className="channel-header">
-        <span className="channel-icon">🔊</span>
-        {channel.name.replace('🔊 ', '')}
+      <div className="room-header">
+        <span className="room-icon">🎧</span>
+        {channel.name}
       </div>
 
       <div className="voice-controls">
         {!isConnected ? (
           <button className="voice-btn join" onClick={handleJoin}>
-            Join Voice Channel
+            Join Audio
           </button>
         ) : (
           <>
@@ -83,16 +83,16 @@ function VoiceChannel({ channel }: VoiceChannelProps) {
               <div className="voice-user">
                 <div className={`speaking-indicator ${!isMuted ? 'active' : ''}`} />
                 <span>You</span>
-                {isMuted && <span style={{ color: '#f38ba8', fontSize: 12 }}>(muted)</span>}
+                {isMuted && <span style={{ color: '#c75c3a', fontSize: 12 }}>(muted)</span>}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
               <button className="voice-btn leave" onClick={handleLeave}>
                 Leave
               </button>
               <button className="voice-btn join" onClick={toggleMute}>
-                {isMuted ? 'Unmute' : 'Mute'}
+                {isMuted ? 'Mic On' : 'Mic Off'}
               </button>
             </div>
 
@@ -101,7 +101,7 @@ function VoiceChannel({ channel }: VoiceChannelProps) {
                 className={`screen-share-btn ${isScreenSharing ? 'stop' : 'start'}`}
                 onClick={handleScreenShare}
               >
-                {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
+                {isScreenSharing ? 'Stop Presenting' : 'Present'}
               </button>
             </div>
           </>

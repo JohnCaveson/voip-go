@@ -11,7 +11,7 @@ type UserListProps = {
 function UserList({ users }: UserListProps) {
   return (
     <div className="user-list">
-      <div className="channel-group-header">Online</div>
+      <div className="room-group-header">Active</div>
       {users.map(user => (
         <div key={user.id} className="user-item">
           <div className="user-online-dot" />
@@ -19,8 +19,8 @@ function UserList({ users }: UserListProps) {
         </div>
       ))}
       {users.length === 0 && (
-        <div style={{ padding: '4px 16px', fontSize: 13, color: '#6c7086' }}>
-          No users online
+        <div style={{ padding: '4px 18px', fontSize: 13, color: '#8a7e74' }}>
+          No one here yet
         </div>
       )}
     </div>

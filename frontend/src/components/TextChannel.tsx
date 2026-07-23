@@ -44,15 +44,15 @@ function TextChannel({ channel }: TextChannelProps) {
 
   return (
     <>
-      <div className="channel-header">
-        <span className="channel-icon">#</span>
-        {channel.name.replace('#', '')}
+      <div className="room-header">
+        <span className="room-icon">💬</span>
+        {channel.name}
       </div>
 
       <div className="messages">
         {messages.length === 0 && (
-          <div style={{ color: '#6c7086', textAlign: 'center', marginTop: 40 }}>
-            Start of #{channel.name.replace('#', '')}
+          <div style={{ color: '#8a7e74', textAlign: 'center', marginTop: 40 }}>
+            Welcome to {channel.name}
           </div>
         )}
         {messages.map(msg => (
@@ -70,7 +70,7 @@ function TextChannel({ channel }: TextChannelProps) {
       <div className="message-input-area">
         <input
           className="message-input"
-          placeholder={`Message #${channel.name.replace('#', '')}`}
+          placeholder="Send a message..."
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}

@@ -13,8 +13,15 @@ func TestParseTypeText(t *testing.T) {
 	}
 }
 
+func TestParseTypeChat(t *testing.T) {
+	result := ParseType("chat")
+	if result != models.ChannelTypeText {
+		t.Errorf("expected ChannelTypeText for 'chat', got %s", result)
+	}
+}
+
 func TestParseTypeTextCaseInsensitive(t *testing.T) {
-	tests := []string{"Text", "TEXT", "text", "tExT"}
+	tests := []string{"Text", "TEXT", "text", "tExT", "Chat", "CHAT"}
 	for _, input := range tests {
 		result := ParseType(input)
 		if result != models.ChannelTypeText {
@@ -30,8 +37,15 @@ func TestParseTypeVoice(t *testing.T) {
 	}
 }
 
+func TestParseTypeAudio(t *testing.T) {
+	result := ParseType("audio")
+	if result != models.ChannelTypeVoice {
+		t.Errorf("expected ChannelTypeVoice for 'audio', got %s", result)
+	}
+}
+
 func TestParseTypeVoiceCaseInsensitive(t *testing.T) {
-	tests := []string{"Voice", "VOICE", "voice", "VoIcE"}
+	tests := []string{"Voice", "VOICE", "voice", "VoIcE", "Audio", "AUDIO"}
 	for _, input := range tests {
 		result := ParseType(input)
 		if result != models.ChannelTypeVoice {
@@ -41,7 +55,7 @@ func TestParseTypeVoiceCaseInsensitive(t *testing.T) {
 }
 
 func TestParseTypeInvalid(t *testing.T) {
-	tests := []string{"", "invalid", "video", "audio", "123"}
+	tests := []string{"", "invalid", "video", "123"}
 	for _, input := range tests {
 		result := ParseType(input)
 		if result != "" {
@@ -67,19 +81,19 @@ func TestErrorSentinels(t *testing.T) {
 		t.Error("ErrInvalidType should not be nil")
 	}
 
-	if ErrNotFound.Error() != "channel not found" {
+	if ErrNotFound.Error() != "room not found" {
 		t.Errorf("unexpected ErrNotFound message: %s", ErrNotFound.Error())
 	}
-	if ErrDefaultDelete.Error() != "cannot delete default channel" {
+	if ErrDefaultDelete.Error() != "cannot delete default room" {
 		t.Errorf("unexpected ErrDefaultDelete message: %s", ErrDefaultDelete.Error())
 	}
-	if ErrDuplicateName.Error() != "channel name already exists" {
+	if ErrDuplicateName.Error() != "room name already exists" {
 		t.Errorf("unexpected ErrDuplicateName message: %s", ErrDuplicateName.Error())
 	}
-	if ErrEmptyName.Error() != "channel name cannot be empty" {
+	if ErrEmptyName.Error() != "room name cannot be empty" {
 		t.Errorf("unexpected ErrEmptyName message: %s", ErrEmptyName.Error())
 	}
-	if ErrInvalidType.Error() != "invalid channel type" {
+	if ErrInvalidType.Error() != "invalid room type" {
 		t.Errorf("unexpected ErrInvalidType message: %s", ErrInvalidType.Error())
 	}
 }
@@ -87,7 +101,7 @@ func TestErrorSentinels(t *testing.T) {
 func TestChannelInfo(t *testing.T) {
 	info := ChannelInfo{
 		ID:        "ch1",
-		Name:      "#general",
+		Name:      "General",
 		Type:      "text",
 		IsDefault: true,
 	}
@@ -95,8 +109,8 @@ func TestChannelInfo(t *testing.T) {
 	if info.ID != "ch1" {
 		t.Errorf("expected ID ch1, got %s", info.ID)
 	}
-	if info.Name != "#general" {
-		t.Errorf("expected name #general, got %s", info.Name)
+	if info.Name != "General" {
+		t.Errorf("expected name General, got %s", info.Name)
 	}
 	if info.Type != "text" {
 		t.Errorf("expected type text, got %s", info.Type)

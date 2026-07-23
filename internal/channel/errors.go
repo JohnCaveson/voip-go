@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	ErrNotFound      = errors.New("channel not found")
-	ErrDefaultDelete = errors.New("cannot delete default channel")
-	ErrDuplicateName = errors.New("channel name already exists")
-	ErrEmptyName     = errors.New("channel name cannot be empty")
-	ErrInvalidType   = errors.New("invalid channel type")
+	ErrNotFound      = errors.New("room not found")
+	ErrDefaultDelete = errors.New("cannot delete default room")
+	ErrDuplicateName = errors.New("room name already exists")
+	ErrEmptyName     = errors.New("room name cannot be empty")
+	ErrInvalidType   = errors.New("invalid room type")
 )
 
 type ChannelInfo struct {
@@ -24,9 +24,9 @@ type ChannelInfo struct {
 
 func ParseType(s string) models.ChannelType {
 	switch strings.ToLower(s) {
-	case "text":
+	case "text", "chat":
 		return models.ChannelTypeText
-	case "voice":
+	case "voice", "audio":
 		return models.ChannelTypeVoice
 	default:
 		return models.ChannelType("")

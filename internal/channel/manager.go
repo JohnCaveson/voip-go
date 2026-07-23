@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	DefaultTextChannelName  = "#general"
-	DefaultVoiceChannelName = "🔊 General"
+	DefaultChatRoomName  = "General"
+	DefaultAudioRoomName = "Lounge"
 )
 
 type Manager struct {
@@ -25,7 +25,7 @@ func NewManager(store storage.Storage) *Manager {
 func (m *Manager) Init(ctx context.Context) error {
 	channels, err := m.store.ListChannels(ctx)
 	if err != nil {
-		return fmt.Errorf("list channels: %w", err)
+		return fmt.Errorf("list rooms: %w", err)
 	}
 
 	existing := make(map[string]bool)
@@ -36,14 +36,14 @@ func (m *Manager) Init(ctx context.Context) error {
 	defaults := []*models.Channel{
 		{
 			ID:        "default-text",
-			Name:      DefaultTextChannelName,
+			Name:      DefaultChatRoomName,
 			Type:      models.ChannelTypeText,
 			IsDefault: true,
 			CreatedAt: time.Now(),
 		},
 		{
 			ID:        "default-voice",
-			Name:      DefaultVoiceChannelName,
+			Name:      DefaultAudioRoomName,
 			Type:      models.ChannelTypeVoice,
 			IsDefault: true,
 			CreatedAt: time.Now(),
@@ -53,7 +53,7 @@ func (m *Manager) Init(ctx context.Context) error {
 	for _, ch := range defaults {
 		if !existing[ch.Name] {
 			if err := m.store.CreateChannel(ctx, ch); err != nil {
-				return fmt.Errorf("create default channel %s: %w", ch.Name, err)
+				return fmt.Errorf("create default room %s: %w", ch.Name, err)
 			}
 		}
 	}
@@ -71,7 +71,7 @@ func (m *Manager) Create(ctx context.Context, name string, chType models.Channel
 
 	channels, err := m.store.ListChannels(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("list channels: %w", err)
+		return nil, fmt.Errorf("list rooms: %w", err)
 	}
 
 	for _, ch := range channels {
@@ -89,7 +89,7 @@ func (m *Manager) Create(ctx context.Context, name string, chType models.Channel
 	}
 
 	if err := m.store.CreateChannel(ctx, ch); err != nil {
-		return nil, fmt.Errorf("create channel: %w", err)
+		return nil, fmt.Errorf("create room: %w", err)
 	}
 
 	return ch, nil
@@ -132,7 +132,7 @@ func (m *Manager) Rename(ctx context.Context, id, newName string) error {
 
 	channels, err := m.store.ListChannels(ctx)
 	if err != nil {
-		return fmt.Errorf("list channels: %w", err)
+		return fmt.Errorf("list rooms: %w", err)
 	}
 
 	for _, other := range channels {

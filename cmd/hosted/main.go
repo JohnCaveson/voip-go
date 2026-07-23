@@ -11,7 +11,7 @@ func main() {
 	app := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:     "VoIP Hosted",
+		Title:     "Gather",
 		Width:     1024,
 		Height:    768,
 		MinWidth:  800,

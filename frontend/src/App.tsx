@@ -65,15 +65,15 @@ function App() {
         }
       } else {
         setChannels([
-          { id: 'default-text', name: '#general', type: 'text', is_default: true },
-          { id: 'default-voice', name: '🔊 General', type: 'voice', is_default: true },
+          { id: 'default-text', name: 'General', type: 'text', is_default: true },
+          { id: 'default-voice', name: 'Lounge', type: 'voice', is_default: true },
         ])
       }
     } catch (err) {
       console.error('Failed to load channels:', err)
       setChannels([
-        { id: 'default-text', name: '#general', type: 'text', is_default: true },
-        { id: 'default-voice', name: '🔊 General', type: 'voice', is_default: true },
+        { id: 'default-text', name: 'General', type: 'text', is_default: true },
+        { id: 'default-voice', name: 'Lounge', type: 'voice', is_default: true },
       ])
     }
   }
@@ -87,7 +87,7 @@ function App() {
     } catch (err) {
       const newChannel: Channel = {
         id: `ch-${Date.now()}`,
-        name: type === 'text' ? `#${name}` : `🔊 ${name}`,
+        name: name,
         type,
         is_default: false,
       }

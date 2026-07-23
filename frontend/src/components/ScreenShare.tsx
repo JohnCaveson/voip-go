@@ -11,7 +11,7 @@ function ScreenShare({ isSharing, onStart, onStop }: ScreenShareProps) {
         className={`screen-share-btn ${isSharing ? 'stop' : 'start'}`}
         onClick={isSharing ? onStop : onStart}
       >
-        {isSharing ? 'Stop Sharing Screen' : 'Share Screen'}
+        {isSharing ? 'Stop Presenting' : 'Present'}
       </button>
     </div>
   )
