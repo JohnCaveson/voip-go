@@ -1,32 +1,18 @@
 import type { Channel, Peer } from '../App'
 
-type SidebarProps = {
+type ChannelListProps = {
   channels: Channel[]
   activeChannelId: string
   onSelectChannel: (id: string) => void
   onAddChannel: () => void
-  appMode: string
-  peers: Peer[]
-  username: string
 }
 
-function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel, appMode, peers, username }: SidebarProps) {
+function ChannelListContent({ channels, activeChannelId, onSelectChannel, onAddChannel }: ChannelListProps) {
   const chatRooms = channels.filter(c => c.type === 'text')
   const audioRooms = channels.filter(c => c.type === 'voice')
-  const isP2P = appMode === 'p2p'
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-header-left">
-          <span className="app-logo">🔥</span>
-          <span>Gather</span>
-        </div>
-        <span className={`mode-badge ${isP2P ? 'mode-p2p' : 'mode-hosted'}`}>
-          {isP2P ? 'P2P' : 'Hosted'}
-        </span>
-      </div>
-
+    <div className="channel-list">
       <div className="room-group">
         <div className="room-group-header">
           <span>Chat</span>
@@ -59,29 +45,68 @@ function Sidebar({ channels, activeChannelId, onSelectChannel, onAddChannel, app
           </div>
         ))}
       </div>
+    </div>
+  )
+}
 
-      {isP2P && peers.length > 0 && (
-        <div className="room-group">
-          <div className="room-group-header">
-            <span>Peers Nearby</span>
+type PeersPanelProps = {
+  peers: Peer[]
+}
+
+function PeersContent({ peers }: PeersPanelProps) {
+  return (
+    <div className="channel-list">
+      <div className="room-group">
+        {peers.length === 0 ? (
+          <div style={{ color: '#8a7e74', padding: '4px 18px', fontSize: 13 }}>
+            No peers found
           </div>
-          {peers.map(peer => (
+        ) : (
+          peers.map(peer => (
             <div key={peer.id} className="room-item peer">
               <span className="peer-dot" />
               {peer.username}
             </div>
-          ))}
-        </div>
-      )}
-
-      <div className="sidebar-footer">
-        <div className="sidebar-user">
-          <div className="user-online-dot" />
-          <span>{username}</span>
-        </div>
+          ))
+        )}
       </div>
     </div>
   )
 }
 
-export default Sidebar
+type UserInfoProps = {
+  username: string
+}
+
+function UserInfoContent({ username }: UserInfoProps) {
+  return (
+    <div className="user-info-panel">
+      <div className="sidebar-user">
+        <div className="user-online-dot" />
+        <span>{username}</span>
+      </div>
+    </div>
+  )
+}
+
+type AppHeaderProps = {
+  appMode: string
+}
+
+function AppHeaderContent({ appMode }: AppHeaderProps) {
+  const isP2P = appMode === 'p2p'
+
+  return (
+    <div className="app-header-content">
+      <div className="sidebar-header-left">
+        <span className="app-logo">🔥</span>
+        <span>Gather</span>
+      </div>
+      <span className={`mode-badge ${isP2P ? 'mode-p2p' : 'mode-hosted'}`}>
+        {isP2P ? 'P2P' : 'Hosted'}
+      </span>
+    </div>
+  )
+}
+
+export { ChannelListContent, PeersContent, UserInfoContent, AppHeaderContent }

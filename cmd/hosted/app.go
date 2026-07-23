@@ -106,3 +106,15 @@ func (a *App) RenameChannel(id, newName string) error {
 func (a *App) GetConfig() config.Config {
 	return a.cfg
 }
+
+func (a *App) SaveLayout(layoutData string) error {
+	return a.storage.SetSetting(a.ctx, "layout:"+a.cfg.Username, layoutData)
+}
+
+func (a *App) GetLayout() string {
+	data, err := a.storage.GetSetting(a.ctx, "layout:"+a.cfg.Username)
+	if err != nil {
+		return ""
+	}
+	return data
+}

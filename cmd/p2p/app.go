@@ -192,3 +192,15 @@ func (a *App) GetDiscoveredPeers() []Peer {
 func (a *App) GetSignalingURL() string {
 	return a.signalingURL
 }
+
+func (a *App) SaveLayout(layoutData string) error {
+	return a.storage.SetSetting(a.ctx, "layout", layoutData)
+}
+
+func (a *App) GetLayout() string {
+	data, err := a.storage.GetSetting(a.ctx, "layout")
+	if err != nil {
+		return ""
+	}
+	return data
+}

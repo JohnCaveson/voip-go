@@ -22,6 +22,10 @@ export function GetDiscoveredPeers() {
   return window['go']['main']['App']['GetDiscoveredPeers']();
 }
 
+export function GetLayout() {
+  return window['go']['main']['App']['GetLayout']();
+}
+
 export function GetSignalingURL() {
   return window['go']['main']['App']['GetSignalingURL']();
 }
@@ -30,6 +34,6 @@ export function RenameChannel(arg1, arg2) {
   return window['go']['main']['App']['RenameChannel'](arg1, arg2);
 }
 
-export function Shutdown() {
-  return window['go']['main']['App']['Shutdown']();
+export function SaveLayout(arg1) {
+  return window['go']['main']['App']['SaveLayout'](arg1);
 }

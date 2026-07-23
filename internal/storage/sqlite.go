@@ -54,6 +54,11 @@ func migrate(db *sql.DB) error {
 			joined_at TEXT NOT NULL,
 			is_online INTEGER NOT NULL DEFAULT 0
 		)`,
+		`CREATE TABLE IF NOT EXISTS settings (
+			key TEXT PRIMARY KEY,
+			value TEXT NOT NULL,
+			updated_at TEXT NOT NULL
+		)`,
 	}
 
 	for _, q := range queries {
@@ -249,6 +254,23 @@ func (s *SQLiteStorage) ListUsers(ctx context.Context) ([]*models.User, error) {
 func (s *SQLiteStorage) SetUserOnline(ctx context.Context, id string, online bool) error {
 	_, err := s.db.ExecContext(ctx,
 		`UPDATE users SET is_online = ? WHERE id = ?`, boolToInt(online), id,
+	)
+	return err
+}
+
+func (s *SQLiteStorage) GetSetting(ctx context.Context, key string) (string, error) {
+	var value string
+	err := s.db.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = ?`, key).Scan(&value)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return value, err
+}
+
+func (s *SQLiteStorage) SetSetting(ctx context.Context, key, value string) error {
+	_, err := s.db.ExecContext(ctx,
+		`INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)`,
+		key, value, time.Now().Format(time.RFC3339),
 	)
 	return err
 }

@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	dbName          = "voip"
-	channelsColl    = "channels"
-	messagesColl    = "messages"
-	usersColl       = "users"
-	connectTimeout  = 10 * time.Second
+	dbName            = "voip"
+	channelsColl      = "channels"
+	messagesColl      = "messages"
+	usersColl         = "users"
+	settingsColl      = "settings"
+	connectTimeout    = 10 * time.Second
 	disconnectTimeout = 5 * time.Second
 )
 
@@ -104,6 +105,15 @@ func ensureIndexes(db *mongo.Database) error {
 	})
 	if err != nil {
 		return fmt.Errorf("users username index: %w", err)
+	}
+
+	settingsCol := db.Collection(settingsColl)
+	_, err = settingsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "key", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return fmt.Errorf("settings key index: %w", err)
 	}
 
 	return nil
@@ -338,6 +348,29 @@ func (s *MongoDBStorage) SetUserOnline(ctx context.Context, id string, online bo
 		return fmt.Errorf("set user online: %w", err)
 	}
 	return nil
+}
+
+func (s *MongoDBStorage) GetSetting(ctx context.Context, key string) (string, error) {
+	var result struct {
+		Value string `bson:"value"`
+	}
+	err := s.database.Collection(settingsColl).FindOne(ctx, bson.M{"key": key}).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return "", nil
+	}
+	return result.Value, err
+}
+
+func (s *MongoDBStorage) SetSetting(ctx context.Context, key, value string) error {
+	_, err := s.database.Collection(settingsColl).UpdateOne(ctx,
+		bson.M{"key": key},
+		bson.M{"$set": bson.M{
+			"value":      value,
+			"updated_at": time.Now(),
+		}},
+		options.Update().SetUpsert(true),
+	)
+	return err
 }
 
 var _ Storage = (*MongoDBStorage)(nil)

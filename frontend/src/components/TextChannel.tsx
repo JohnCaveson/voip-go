@@ -71,10 +71,8 @@ function TextChannel({ channel, signalingURL, username }: TextChannelProps) {
   }
 
   return (
-    <>
-      <div className="room-header">
-        <span className="room-icon">💬</span>
-        {channel.name}
+    <div className="text-channel">
+      <div className="ephemeral-note-bar">
         <span className="ephemeral-note">Messages are not persisted</span>
       </div>
 
@@ -105,7 +103,7 @@ function TextChannel({ channel, signalingURL, username }: TextChannelProps) {
           onKeyDown={handleKeyDown}
         />
       </div>
-    </>
+    </div>
   )
 }
 

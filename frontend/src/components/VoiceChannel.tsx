@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { Channel } from '../App'
 import { useSignaling } from '../hooks/useSignaling'
 import { useWebRTC } from '../hooks/useWebRTC'
@@ -70,12 +70,7 @@ function VoiceChannel({ channel, signalingURL, username }: VoiceChannelProps) {
   }, [])
 
   return (
-    <>
-      <div className="room-header">
-        <span className="room-icon">🎧</span>
-        {channel.name}
-      </div>
-
+    <div className="voice-channel">
       <div className="voice-controls">
         {!isConnected ? (
           <button className="voice-btn join" onClick={handleJoin}>
@@ -124,7 +119,7 @@ function VoiceChannel({ channel, signalingURL, username }: VoiceChannelProps) {
       {localStream && (
         <audio ref={(el) => { if (el) el.srcObject = localStream }} autoPlay muted />
       )}
-    </>
+    </div>
   )
 }
 

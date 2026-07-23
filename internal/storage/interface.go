@@ -27,9 +27,15 @@ type UserStore interface {
 	SetUserOnline(ctx context.Context, id string, online bool) error
 }
 
+type SettingsStore interface {
+	GetSetting(ctx context.Context, key string) (string, error)
+	SetSetting(ctx context.Context, key, value string) error
+}
+
 type Storage interface {
 	ChannelStore
 	MessageStore
 	UserStore
+	SettingsStore
 	Close() error
 }

@@ -99,7 +99,8 @@ cd ..
 
 **P2P mode (default — everything runs locally):**
 ```bash
-wails dev -tags webkit2_41
+cd cmd/p2p
+wails dev
 ```
 
 This starts the app with hot-reload. Changes to Go or React code auto-refresh.
@@ -110,10 +111,11 @@ This starts the app with hot-reload. Changes to Go or React code auto-refresh.
 docker compose up -d
 
 # Run the app connected to them
+cd cmd/hosted
 VOIP_APP_MODE=hosted \
 VOIP_MONGODB_URI=mongodb://localhost:27017 \
 VOIP_SERVER_ADDR=ws://localhost:9321/signaling \
-wails dev -tags webkit2_41
+wails dev
 ```
 
 ---
@@ -125,7 +127,7 @@ Once built, anyone on your LAN can connect to the app. Here's how:
 ### 1. Build the App
 
 ```bash
-wails build -tags webkit2_41 -o gather
+cd cmd/p2p && wails build -o gather
 ```
 
 ### 2. Find Your Local IP
@@ -219,11 +221,11 @@ For NAT traversal on peer-to-peer audio (when both clients are behind routers), 
 ### Build Commands
 
 ```bash
-# Build for current platform
-wails build -tags webkit2_41 -o gather
+# P2P mode (from repo root or cmd/p2p)
+cd cmd/p2p && wails build -o voip-p2p
 
-# Cross-compile for a specific platform
-wails build -tags webkit2_41 -o gather -platform <target>
+# Hosted mode
+cd cmd/hosted && wails build -o voip-hosted
 ```
 
 The output is a single binary in `build/bin/`. No installer needed — just copy and run.
@@ -242,10 +244,10 @@ The output is a single binary in `build/bin/`. No installer needed — just copy
 
 ```bash
 # P2P mode (standalone, no server needed)
-wails build -tags webkit2_41 -o gather-p2p
+cd cmd/p2p && wails build -o voip-p2p
 
 # Hosted mode (connects to remote signaling server)
-wails build -tags webkit2_41 -o gather-hosted
+cd cmd/hosted && wails build -o voip-hosted
 ```
 
 ### Distributing the App
@@ -254,7 +256,7 @@ wails build -tags webkit2_41 -o gather-hosted
 
 ```bash
 # Build for your platform
-wails build -tags webkit2_41 -o gather
+cd cmd/p2p && wails build -o gather
 
 # The binary is here:
 ls build/bin/gather
@@ -370,32 +372,58 @@ voip-go/
 ├── cmd/
 │   ├── p2p/                  # P2P desktop app
 │   │   ├── main.go           # Wails entry point
-│   │   └── app.go            # App logic (SQLite + mDNS)
+│   │   ├── app.go            # App logic (SQLite + mDNS)
+│   │   ├── wails.json        # Wails config
+│   │   ├── go.mod
+│   │   └── go.sum
 │   └── hosted/               # Hosted desktop app
 │       ├── main.go           # Wails entry point
-│       └── app.go            # App logic (MongoDB + signaling)
+│       ├── app.go            # App logic (MongoDB + signaling)
+│       ├── wails.json        # Wails config
+│       ├── go.mod
+│       └── go.sum
 ├── internal/
 │   ├── config/               # Environment-based configuration
-│   ├── models/               # Data models (Room, Message, User)
 │   ├── storage/              # Storage backends
-│   │   ├── interface.go      # Storage interface
+│   │   ├── interface.go      # Storage interface (Channels, Messages, Users, Settings)
 │   │   ├── sqlite.go         # SQLite implementation
 │   │   └── mongodb.go        # MongoDB implementation
 │   ├── channel/              # Room management
 │   ├── signaling/            # WebSocket signaling (server + client)
 │   └── discovery/            # mDNS LAN peer discovery
-├── pkg/api/                  # Shared API types
+├── pkg/
+│   ├── api/                  # Shared signaling message types
+│   └── models/               # Domain models (User, Channel, Message)
 ├── server/                   # Standalone signaling server
 │   └── cmd/server/main.go
 ├── frontend/                 # React + TypeScript UI
 │   ├── src/
 │   │   ├── App.tsx           # Main app component
 │   │   ├── App.css           # Warm earth-tone theme
-│   │   └── components/       # UI components
-│   └── wailsjs/              # Auto-generated Wails bindings
+│   │   ├── store/
+│   │   │   └── layoutStore.ts    # Zustand layout state
+│   │   ├── utils/
+│   │   │   └── layoutCodec.ts    # Layout encode/decode
+│   │   ├── components/       # UI components
+│   │   │   ├── Panel.tsx         # Draggable/resizable panel (react-rnd)
+│   │   │   ├── Layout.tsx        # Panel layout container
+│   │   │   ├── SnapToggle.tsx    # Grid/free-form toggle
+│   │   │   ├── TextChannel.tsx   # Text chat panel
+│   │   │   ├── VoiceChannel.tsx  # Voice chat panel
+│   │   │   ├── Sidebar.tsx       # Channel list, peers, user info panels
+│   │   │   ├── ConnectionStatus.tsx
+│   │   │   └── ... (modals)
+│   │   ├── hooks/            # useSignaling, useWebRTC
+│   │   └── services/         # SignalingClient, StorageService
+│   ├── wailsjs/              # Auto-generated Wails Go<->JS bindings
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+├── go.work                   # Go workspace
 ├── docker-compose.yml        # MongoDB + signaling server
-├── wails-p2p.json            # Wails config for P2P build
-└── wails-hosted.json         # Wails config for hosted build
+├── Dockerfile                # Signaling server container
+├── README.md
+└── PLAN.md
 ```
 
 ---
@@ -404,6 +432,12 @@ voip-go/
 
 **`wails dev` fails with "webview not found":**
 Run `wails doctor` and install any missing system dependencies.
+
+**`wails dev` fails with "cannot find wails.json":**
+You must run from `cmd/p2p/` or `cmd/hosted/` — those directories have their own `wails.json`:
+```bash
+cd cmd/p2p && wails dev
+```
 
 **Frontend shows blank screen:**
 ```bash

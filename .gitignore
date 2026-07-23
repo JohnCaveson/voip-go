@@ -18,6 +18,7 @@ go.work.sum
 
 # Dependency directories
 vendor/
+frontend/node_modules/
 
 # IDE
 .idea/

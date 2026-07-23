@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import Sidebar from './components/Sidebar'
-import TextChannel from './components/TextChannel'
-import VoiceChannel from './components/VoiceChannel'
+import Layout from './components/Layout'
 import AddChannelModal from './components/AddChannelModal'
 import UsernameModal from './components/UsernameModal'
-import ConnectionStatus from './components/ConnectionStatus'
-import { GetConfig, GetChannels, GetDiscoveredPeers, GetSignalingURL } from '../wailsjs/go/main/App'
+import SnapToggle from './components/SnapToggle'
+import { GetConfig, GetChannels, GetDiscoveredPeers, GetSignalingURL, GetLayout } from '../wailsjs/go/main/App'
+import { useLayoutStore } from './store/layoutStore'
 
 export type Channel = {
   id: string
@@ -44,6 +43,7 @@ function App() {
     loadConfig()
     loadChannels()
     loadSignalingURL()
+    loadLayout()
   }, [])
 
   useEffect(() => {
@@ -58,6 +58,30 @@ function App() {
     loadPeers()
     return () => clearInterval(interval)
   }, [config])
+
+  const loadLayout = async () => {
+    // 1. Try Go backend
+    try {
+      const encoded = await GetLayout()
+      if (encoded && useLayoutStore.getState().loadFromEncoded(encoded)) {
+        return
+      }
+    } catch {
+      // Wails not available or no saved layout
+    }
+
+    // 2. Try localStorage backup
+    try {
+      const backup = localStorage.getItem('gather-layout-backup')
+      if (backup && useLayoutStore.getState().loadFromEncoded(backup)) {
+        return
+      }
+    } catch {
+      // localStorage not available
+    }
+
+    // 3. Default layout is already set in the store initializer
+  }
 
   const loadConfig = async () => {
     try {
@@ -116,8 +140,6 @@ function App() {
     }
   }
 
-  const activeChannel = channels.find(c => c.id === activeChannelId)
-
   const handleSetUsername = (name: string) => {
     localStorage.setItem('gather-username', name)
     setUsername(name)
@@ -141,33 +163,18 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <Sidebar
+    <>
+      <Layout
         channels={channels}
         activeChannelId={activeChannelId}
         onSelectChannel={setActiveChannelId}
         onAddChannel={() => setShowAddModal(true)}
-        appMode={config?.AppMode ?? 'p2p'}
+        config={config}
         peers={peers}
         username={username ?? 'anonymous'}
+        signalingURL={signalingURL}
       />
-      <div className="main-content">
-        {activeChannel?.type === 'text' && (
-          <TextChannel
-            channel={activeChannel}
-            signalingURL={signalingURL}
-            username={config?.Username ?? 'anonymous'}
-          />
-        )}
-        {activeChannel?.type === 'voice' && (
-          <VoiceChannel
-            channel={activeChannel}
-            signalingURL={signalingURL}
-            username={username ?? 'anonymous'}
-          />
-        )}
-        <ConnectionStatus config={config} />
-      </div>
+      <SnapToggle />
       {showAddModal && (
         <AddChannelModal
           onClose={() => setShowAddModal(false)}
@@ -177,7 +184,7 @@ function App() {
       {showUsernameModal && (
         <UsernameModal onConfirm={handleSetUsername} />
       )}
-    </div>
+    </>
   )
 }
 

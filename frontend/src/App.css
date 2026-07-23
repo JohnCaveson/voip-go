@@ -9,30 +9,151 @@ html, body, #root {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #1a1614;
   color: #e8ddd0;
+  overflow: hidden;
 }
 
-.app {
-  display: flex;
+/* ===== Layout Container ===== */
+
+.layout-container {
+  position: relative;
+  width: 100vw;
   height: 100vh;
+  overflow: hidden;
+  background: #1a1614;
 }
 
-.sidebar {
-  width: 260px;
+/* ===== Panel System ===== */
+
+.panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: #231f1b;
+  border: 1px solid #3d332c;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  border-right: 1px solid #3d332c;
+  overflow: hidden;
 }
 
-.sidebar-header {
-  padding: 20px 18px;
+.panel--maximized {
+  border-radius: 0;
+  border: none;
+}
+
+.panel--minimized {
+  height: 100% !important;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 36px;
+  min-height: 36px;
+  background: #1e1a17;
   border-bottom: 1px solid #3d332c;
-  font-weight: 700;
-  font-size: 16px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.panel-header:active {
+  cursor: grabbing;
+}
+
+.panel-header--minimized {
+  cursor: default;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8ddd0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-controls {
+  display: flex;
+  gap: 5px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.panel-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.panel-btn-minimize {
+  background: #c4a35a;
+  color: #1a1614;
+}
+
+.panel-btn-minimize:hover {
+  background: #d4b46a;
+}
+
+.panel-btn-maximize {
+  background: #b07d4f;
+  color: #1a1614;
+}
+
+.panel-btn-maximize:hover {
+  background: #c08d5f;
+}
+
+.panel-btn-close {
+  background: #c75c3a;
+  color: #1a1614;
+}
+
+.panel-btn-close:hover {
+  background: #d46c4a;
+}
+
+.panel-btn-restore {
+  background: #c4a35a;
+  color: #1a1614;
+}
+
+.panel-btn-restore:hover {
+  background: #d4b46a;
+}
+
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ===== App Header Panel ===== */
+
+.app-header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 18px;
+  height: 100%;
+  font-weight: 700;
+  font-size: 16px;
   letter-spacing: -0.3px;
 }
 
@@ -44,6 +165,14 @@ html, body, #root {
 
 .app-logo {
   font-size: 20px;
+}
+
+/* ===== Channel List Panel ===== */
+
+.channel-list {
+  padding: 8px 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .room-group {
@@ -109,44 +238,77 @@ html, body, #root {
   opacity: 0.7;
 }
 
-.add-room-btn {
-  padding: 6px 18px;
-  font-size: 13px;
-  color: #8a7e74;
-  cursor: pointer;
-  border: none;
-  background: none;
-  text-align: left;
-  width: 100%;
-  margin-top: 4px;
-  transition: color 0.15s;
+.room-item.peer {
+  cursor: default;
 }
 
-.add-room-btn:hover {
-  color: #b07d4f;
+.peer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c4a35a;
+  box-shadow: 0 0 6px rgba(196, 163, 90, 0.4);
 }
 
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+/* ===== User Info Panel ===== */
+
+.user-info-panel {
+  padding: 12px 18px;
 }
 
-.room-header {
-  padding: 14px 22px;
-  border-bottom: 1px solid #3d332c;
-  font-weight: 600;
-  font-size: 15px;
+.sidebar-user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  font-size: 13px;
+  color: #b8a99a;
+  font-weight: 500;
+}
+
+.user-online-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c4a35a;
+}
+
+/* ===== Mode Badge ===== */
+
+.mode-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mode-p2p {
+  background: #c4a35a;
+  color: #1a1614;
+}
+
+.mode-hosted {
+  background: #b07d4f;
+  color: #1a1614;
+}
+
+/* ===== Text Channel ===== */
+
+.text-channel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.ephemeral-note-bar {
+  padding: 6px 18px;
+  border-bottom: 1px solid #3d332c;
   flex-shrink: 0;
-  background: #1e1a17;
 }
 
 .ephemeral-note {
-  margin-left: auto;
   font-size: 11px;
   font-weight: 400;
   color: #6b6058;
@@ -160,6 +322,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-height: 0;
 }
 
 .message {
@@ -214,6 +377,15 @@ html, body, #root {
 
 .message-input:focus {
   border-color: #b07d4f;
+}
+
+/* ===== Voice Channel ===== */
+
+.voice-channel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .voice-controls {
@@ -322,6 +494,59 @@ html, body, #root {
   background: #d46c4a;
 }
 
+/* ===== Connection Status Panel ===== */
+
+.connection-status-content {
+  display: flex;
+  gap: 18px;
+  font-size: 11px;
+  color: #8a7e74;
+  padding: 7px 18px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-label {
+  color: #8a7e74;
+}
+
+.status-value {
+  color: #b8a99a;
+}
+
+.status-local {
+  color: #c4a35a;
+}
+
+.status-remote {
+  color: #b07d4f;
+}
+
+.status-connected {
+  color: #c4a35a;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8a7e74;
+}
+
+.status-dot.connected {
+  background: #c4a35a;
+}
+
+.status-dot.disconnected {
+  background: #c75c3a;
+}
+
+/* ===== Modals ===== */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -332,7 +557,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .modal {
@@ -410,60 +635,64 @@ html, body, #root {
   background: #c08d5f;
 }
 
-.connection-status {
-  position: fixed;
-  bottom: 0;
-  left: 260px;
-  right: 0;
-  padding: 7px 18px;
-  background: #151210;
-  border-top: 1px solid #3d332c;
-  display: flex;
-  gap: 18px;
-  font-size: 11px;
-  color: #8a7e74;
+.username-modal {
+  align-items: center;
 }
 
-.status-item {
+.username-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== Snap Toggle ===== */
+
+.snap-toggle {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  z-index: 500;
   display: flex;
   align-items: center;
   gap: 5px;
-}
-
-.status-label {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #3d332c;
+  background: #231f1b;
   color: #8a7e74;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
 
-.status-value {
-  color: #b8a99a;
+.snap-toggle:hover {
+  background: #3d332c;
+  color: #e8ddd0;
 }
 
-.status-local {
+.snap-toggle--on {
+  background: #4a3f36;
   color: #c4a35a;
+  border-color: #c4a35a;
 }
 
-.status-remote {
-  color: #b07d4f;
+.snap-toggle--on:hover {
+  background: #5a4f46;
 }
 
-.status-connected {
-  color: #c4a35a;
+/* ===== react-rnd overrides ===== */
+
+.react-rnd {
+  /* Remove default react-rnd outline */
 }
 
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #8a7e74;
+.react-rnd .react-draggable-dragging {
+  opacity: 0.9;
 }
 
-.status-dot.connected {
-  background: #c4a35a;
-}
-
-.status-dot.disconnected {
-  background: #c75c3a;
-}
+/* ===== User List (legacy, kept for compatibility) ===== */
 
 .user-list {
   padding: 8px 0;
@@ -478,66 +707,19 @@ html, body, #root {
   gap: 7px;
 }
 
-.user-online-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #c4a35a;
-}
-
-.mode-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 5px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.mode-p2p {
-  background: #c4a35a;
-  color: #1a1614;
-}
-
-.mode-hosted {
-  background: #b07d4f;
-  color: #1a1614;
-}
-
-.room-item.peer {
-  cursor: default;
-}
-
-.peer-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #c4a35a;
-  box-shadow: 0 0 6px rgba(196, 163, 90, 0.4);
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 12px 18px;
-  border-top: 1px solid #3d332c;
-}
-
-.sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.add-room-btn {
+  padding: 6px 18px;
   font-size: 13px;
-  color: #b8a99a;
-  font-weight: 500;
+  color: #8a7e74;
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  margin-top: 4px;
+  transition: color 0.15s;
 }
 
-.username-modal {
-  align-items: center;
-}
-
-.username-modal-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+.add-room-btn:hover {
+  color: #b07d4f;
 }

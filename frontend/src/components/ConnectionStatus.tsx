@@ -10,7 +10,7 @@ function ConnectionStatus({ config }: ConnectionStatusProps) {
   const isP2P = config.AppMode === 'p2p'
 
   return (
-    <div className="connection-status">
+    <div className="connection-status-content">
       <div className="status-item">
         <span className="status-label">Storage:</span>
         <span className={`status-value ${isP2P ? 'status-local' : 'status-remote'}`}>
