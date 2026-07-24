@@ -2,6 +2,21 @@
 
 A peer-to-peer and hosted communication app built with Wails, React, and Go. Friends can gather, chat, and talk — or communities can spin up their own hosted instance.
 
+## Quick Start
+
+```bash
+# 1. Install system deps (see below)
+# 2. Install Go 1.26+, Node 18+, Wails CLI
+# 3. Clone and run
+git clone https://github.com/your-username/voip-go.git
+cd voip-go
+go mod tidy && cd frontend && npm install && cd ..
+cd cmd/p2p
+wails dev -tags webkit2_41   # <-- the build tag is required on most Linux distros
+```
+
+The app window opens with hot-reload. The signaling server starts on `:9321` and mDNS discovery begins immediately. You should see `"Discovered N peer(s)"` in the terminal if other instances are running on your LAN.
+
 ## Two App Modes
 
 | | **P2P** | **Hosted** |
@@ -17,6 +32,14 @@ A peer-to-peer and hosted communication app built with Wails, React, and Go. Fri
 ## Getting Started
 
 ### 1. Install System Dependencies
+
+**Linux (Arch):**
+```bash
+sudo pacman -S --needed \
+  webkit2gtk-4.1 \
+  gtk3 \
+  pkgconf
+```
 
 **Linux (Debian/Ubuntu):**
 ```bash
@@ -73,12 +96,12 @@ npm --version
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 ```
 
-Verify:
+Verify — this is the most important pre-flight check:
 ```bash
 wails doctor
 ```
 
-`wails doctor` will check your system has all required dependencies. Fix any issues it reports before continuing.
+`wails doctor` reports missing system libraries. The only critical one is **libwebkit**. Everything else is optional. If `wails doctor` says `libwebkit` is "Not Found" but you know it's installed (e.g. on Arch), that's fine — it sometimes can't detect it. The build tag `-tags webkit2_41` (below) forces the correct linking.
 
 ### 5. Clone and Setup
 
@@ -100,10 +123,17 @@ cd ..
 **P2P mode (default — everything runs locally):**
 ```bash
 cd cmd/p2p
-wails dev
+wails dev -tags webkit2_41
 ```
 
-This starts the app with hot-reload. Changes to Go or React code auto-refresh.
+> **Important:** You must pass `-tags webkit2_41` on most Linux distros. Without it the build will fail with `Package webkit2gtk-4.0 was not found`. This tag tells Wails to link against `webkit2gtk-4.1` instead of the older `4.0`.
+
+This starts the app with hot-reload. Changes to Go or React code auto-refresh. You'll see three things in the terminal:
+1. **Vite** dev server on `http://localhost:5173` (frontend assets)
+2. **Wails dev server** on a random port (browser access to Go bindings)
+3. **The native app window** itself
+
+If you edit Go code, the entire app recompiles (takes a few seconds). If you edit frontend code, Vite hot-reloads instantly.
 
 **Hosted mode (requires MongoDB + signaling server):**
 ```bash
@@ -115,7 +145,7 @@ cd cmd/hosted
 VOIP_APP_MODE=hosted \
 VOIP_MONGODB_URI=mongodb://localhost:27017 \
 VOIP_SERVER_ADDR=ws://localhost:9321/signaling \
-wails dev
+wails dev -tags webkit2_41
 ```
 
 ---
@@ -127,7 +157,7 @@ Once built, anyone on your LAN can connect to the app. Here's how:
 ### 1. Build the App
 
 ```bash
-cd cmd/p2p && wails build -o gather
+cd cmd/p2p && wails build -tags webkit2_41 -o gather
 ```
 
 ### 2. Find Your Local IP
@@ -222,10 +252,10 @@ For NAT traversal on peer-to-peer audio (when both clients are behind routers), 
 
 ```bash
 # P2P mode (from repo root or cmd/p2p)
-cd cmd/p2p && wails build -o voip-p2p
+cd cmd/p2p && wails build -tags webkit2_41 -o voip-p2p
 
 # Hosted mode
-cd cmd/hosted && wails build -o voip-hosted
+cd cmd/hosted && wails build -tags webkit2_41 -o voip-hosted
 ```
 
 The output is a single binary in `build/bin/`. No installer needed — just copy and run.
@@ -240,23 +270,13 @@ The output is a single binary in `build/bin/`. No installer needed — just copy
 | macOS (arm64) | `-platform darwin/arm64` | Apple Silicon (M1/M2/M3) |
 | Windows (amd64) | `-platform windows/amd64` | Requires WebView2 (usually pre-installed) |
 
-### Building Both Modes
-
-```bash
-# P2P mode (standalone, no server needed)
-cd cmd/p2p && wails build -o voip-p2p
-
-# Hosted mode (connects to remote signaling server)
-cd cmd/hosted && wails build -o voip-hosted
-```
-
 ### Distributing the App
 
 **Wails produces a single executable** — no installer, no framework dependencies on the target (except system libraries):
 
 ```bash
 # Build for your platform
-cd cmd/p2p && wails build -o gather
+cd cmd/p2p && wails build -tags webkit2_41 -o gather
 
 # The binary is here:
 ls build/bin/gather
@@ -277,7 +297,7 @@ That's it. They run the binary, enter a username, and they're in.
 ### Standalone Signaling Server
 
 ```bash
-go build -o signaling-server ./server/cmd/server
+go build -tags webkit2_41 -o signaling-server ./server/cmd/server
 ./signaling-server --port 9321
 ```
 
@@ -371,39 +391,39 @@ Services:
 voip-go/
 ├── cmd/
 │   ├── p2p/                  # P2P desktop app
-│   │   ├── main.go           # Wails entry point
-│   │   ├── app.go            # App logic (SQLite + mDNS)
-│   │   ├── wails.json        # Wails config
+│   │   ├── main.go           # Wails entry point — creates app, configures window
+│   │   ├── app.go            # App logic — SQLite storage, mDNS discovery, WebRTC
+│   │   ├── wails.json        # Wails config — points to ../../frontend
 │   │   ├── go.mod
 │   │   └── go.sum
 │   └── hosted/               # Hosted desktop app
 │       ├── main.go           # Wails entry point
-│       ├── app.go            # App logic (MongoDB + signaling)
+│       ├── app.go            # App logic — MongoDB storage, remote signaling
 │       ├── wails.json        # Wails config
 │       ├── go.mod
 │       └── go.sum
 ├── internal/
-│   ├── config/               # Environment-based configuration
+│   ├── config/               # Environment-based configuration (VOIP_* vars)
 │   ├── storage/              # Storage backends
 │   │   ├── interface.go      # Storage interface (Channels, Messages, Users, Settings)
-│   │   ├── sqlite.go         # SQLite implementation
-│   │   └── mongodb.go        # MongoDB implementation
-│   ├── channel/              # Room management
+│   │   ├── sqlite.go         # SQLite implementation (P2P mode)
+│   │   └── mongodb.go        # MongoDB implementation (hosted mode)
+│   ├── channel/              # Room management — create, join, list channels
 │   ├── signaling/            # WebSocket signaling (server + client)
 │   └── discovery/            # mDNS LAN peer discovery
 ├── pkg/
 │   ├── api/                  # Shared signaling message types
 │   └── models/               # Domain models (User, Channel, Message)
-├── server/                   # Standalone signaling server
+├── server/                   # Standalone signaling server (hosted mode)
 │   └── cmd/server/main.go
 ├── frontend/                 # React + TypeScript UI
 │   ├── src/
-│   │   ├── App.tsx           # Main app component
+│   │   ├── App.tsx           # Main app component — mounts layout, modals
 │   │   ├── App.css           # Warm earth-tone theme
 │   │   ├── store/
-│   │   │   └── layoutStore.ts    # Zustand layout state
+│   │   │   └── layoutStore.ts    # Zustand layout state — panel positions/sizes
 │   │   ├── utils/
-│   │   │   └── layoutCodec.ts    # Layout encode/decode
+│   │   │   └── layoutCodec.ts    # Layout encode/decode — base64 persistence
 │   │   ├── components/       # UI components
 │   │   │   ├── Panel.tsx         # Draggable/resizable panel (react-rnd)
 │   │   │   ├── Layout.tsx        # Panel layout container
@@ -419,7 +439,7 @@ voip-go/
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tsconfig.json
-├── go.work                   # Go workspace
+├── go.work                   # Go workspace — links cmd/, internal/, pkg/, server/
 ├── docker-compose.yml        # MongoDB + signaling server
 ├── Dockerfile                # Signaling server container
 ├── README.md
@@ -430,23 +450,39 @@ voip-go/
 
 ## Troubleshooting
 
-**`wails dev` fails with "webview not found":**
-Run `wails doctor` and install any missing system dependencies.
+### Build Errors
+
+**`Package webkit2gtk-4.0 was not found` / `libwebkit not found`:**
+Your system has webkit2gtk-4.1, not the older 4.0. Always pass the build tag:
+```bash
+wails dev -tags webkit2_41
+wails build -tags webkit2_41 -o gather
+```
+The wails.json files already include `"buildTags": "webkit2_41"` but the CLI flag takes precedence and is more reliable.
 
 **`wails dev` fails with "cannot find wails.json":**
 You must run from `cmd/p2p/` or `cmd/hosted/` — those directories have their own `wails.json`:
 ```bash
-cd cmd/p2p && wails dev
-```
-
-**Frontend shows blank screen:**
-```bash
-cd frontend && npm install && npm run build
+cd cmd/p2p && wails dev -tags webkit2_41
 ```
 
 **Go build fails with "cannot find module":**
+This is a Go workspace issue. Run from the repo root:
 ```bash
-go mod tidy
+go mod tidy          # root module
+cd cmd/p2p && go mod tidy   # p2p module
+cd ../../frontend && npm install
+```
+
+**`wails dev` fails with "webview not found":**
+Run `wails doctor` and install any missing system dependencies. See the [Install System Dependencies](#1-install-system-dependencies) section.
+
+### Runtime Errors
+
+**Port 9321 already in use:**
+Either stop the other process or use a different port:
+```bash
+VOIP_PORT=9322 wails dev -tags webkit2_41
 ```
 
 **MongoDB connection refused (hosted mode):**
@@ -456,8 +492,53 @@ docker compose ps
 docker compose up -d
 ```
 
-**Port 9321 already in use:**
-Either stop the other process or use a different port:
+**Frontend shows blank screen:**
 ```bash
-VOIP_PORT=9322 wails dev -tags webkit2_41
+cd frontend && npm install && npm run build
+```
+
+**App starts but no peers are discovered:**
+mDNS only works on the same subnet. Check that:
+1. Both machines are on the same network
+2. UDP port 5353 is not blocked by your firewall
+3. Your router/access point allows multicast traffic
+
+### Where Things Live
+
+| What | Location |
+|---|---|
+| Local data (P2P mode) | `./data/` directory (SQLite database, settings) |
+| Build output | `cmd/p2p/build/bin/` or `cmd/hosted/build/bin/` |
+| Wails dev server | Random port shown in terminal (e.g. `http://localhost:34115`) |
+| Vite dev server | `http://localhost:5173` |
+| Signaling server | Port `9321` (both dev and production) |
+| mDNS broadcast | UDP port `5353` |
+
+### Debugging Tips
+
+**View Go logs in dev mode:**
+All `println()` and log output from the Go backend appears in the terminal where you ran `wails dev`.
+
+**Frontend dev tools:**
+In dev mode, right-click the app window → "Inspect Element" to open WebKit Inspector. This works exactly like Chrome DevTools.
+
+**Inspect Wails bindings:**
+In the browser at the Wails dev server URL (e.g. `http://localhost:34115`), you can call Go methods from the console:
+```js
+// Example: list channels
+window.go.main.App.GetChannels()
+```
+
+**Reset local data:**
+Delete the data directory to start fresh:
+```bash
+rm -rf cmd/p2p/data/
+```
+
+**Test the signaling server standalone:**
+```bash
+cd server && go build -o signaling-server ./cmd/server
+./signaling-server --port 9321
+# Then point a client at it:
+VOIP_APP_MODE=hosted VOIP_SERVER_ADDR=ws://localhost:9321/signaling wails dev -tags webkit2_41
 ```

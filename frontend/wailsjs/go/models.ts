@@ -21,29 +21,6 @@ export namespace channel {
 
 }
 
-export namespace main {
-	
-	export class Peer {
-	    id: string;
-	    username: string;
-	    addr: string;
-	    signaling_addr: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Peer(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.id = source["id"];
-	        this.username = source["username"];
-	        this.addr = source["addr"];
-	        this.signaling_addr = source["signaling_addr"];
-	    }
-	}
-
-}
-
 export namespace config {
 	
 	export class TURNConfig {
@@ -109,6 +86,29 @@ export namespace config {
 		    }
 		    return a;
 		}
+	}
+
+}
+
+export namespace main {
+	
+	export class Peer {
+	    id: string;
+	    username: string;
+	    addr: string;
+	    signaling_addr: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Peer(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.username = source["username"];
+	        this.addr = source["addr"];
+	        this.signaling_addr = source["signaling_addr"];
+	    }
 	}
 
 }
